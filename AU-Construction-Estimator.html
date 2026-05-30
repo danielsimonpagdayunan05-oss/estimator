@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Construction Estimator — Fajardo / PH Method</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#13202e; --ink2:#1d3042; --paper:#eceae1; --paper2:#f6f5ef;
+  --line:#c8c3b4; --line2:#d9d5c8;
+  --amber:#e0922b; --amber-d:#b9701a; --amber-soft:#f6e3c4;
+  --steel:#2f6f8f; --green:#3c7d52; --red:#bb4634;
+  --muted:#6b7280; --muted2:#8b8576;
+  --shadow:0 1px 0 #fff inset, 0 2px 8px rgba(19,32,46,.08);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:'Archivo',sans-serif;color:var(--ink);background:var(--paper);
+  background-image:linear-gradient(rgba(19,32,46,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(19,32,46,.035) 1px,transparent 1px);
+  background-size:22px 22px;font-size:15px;line-height:1.4;padding-bottom:96px}
+.mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.02em}
+header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--paper2);padding:12px 16px 0;box-shadow:0 4px 16px rgba(19,32,46,.25)}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border:2px solid var(--amber);border-radius:5px;flex:none;display:grid;place-items:center;font-weight:900;color:var(--amber);font-size:15px;
+  background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(224,146,43,.12) 3px,rgba(224,146,43,.12) 5px)}
+.brand h1{font-size:16px;line-height:1.05;letter-spacing:-.01em}
+.brand small{display:block;font-weight:500;font-size:10.5px;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+.bagtog{margin-left:auto;display:flex;background:rgba(255,255,255,.08);border-radius:8px;padding:3px;font-size:12px;font-weight:700}
+.bagtog button{border:0;background:transparent;color:#b9c2cc;padding:5px 9px;border-radius:6px;font:inherit;font-weight:700;cursor:pointer}
+.bagtog button.on{background:var(--amber);color:var(--ink)}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin-top:11px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:0;background:transparent;color:#9aa6b1;font:inherit;font-weight:700;padding:9px 13px;cursor:pointer;font-size:13px;border-bottom:3px solid transparent;white-space:nowrap}
+.tab.on{color:var(--paper2);border-bottom-color:var(--amber)}
+.tab .dot{display:inline-block;min-width:16px;height:16px;line-height:16px;text-align:center;font-size:10px;background:var(--amber);color:var(--ink);border-radius:8px;margin-left:5px;font-weight:800;padding:0 3px}
+main{padding:16px 14px 0;max-width:780px;margin:0 auto}
+.view{display:none;animation:fade .25s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.intro{font-size:13px;color:var(--ink2);background:var(--amber-soft);border:1px solid #e8cf9e;border-left:4px solid var(--amber);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+.intro b{font-weight:800}
+.card{background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card.item{border-left:4px solid var(--steel);position:relative}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.card-head h3{font-size:14.5px;flex:1}
+.idx{width:22px;height:22px;border-radius:6px;background:var(--ink);color:var(--paper2);display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
+.del{border:0;background:#f0d9d4;color:var(--red);width:28px;height:28px;border-radius:7px;font-size:16px;font-weight:800;cursor:pointer;flex:none;line-height:1}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+label.f .lbl{display:flex;justify-content:space-between;align-items:baseline}
+label.f .u{color:var(--muted2);font-weight:600;text-transform:none;letter-spacing:0}
+input,select{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;appearance:none;-webkit-appearance:none}
+select{font-family:'Archivo',sans-serif;font-weight:600;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%2313202e' stroke-width='1.6' fill='none'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+input:focus,select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(224,146,43,.18)}
+input::placeholder{color:#b8b3a5}
+.txt input{font-family:'Archivo',sans-serif}
+.res{margin-top:11px;border-top:1px dashed var(--line);padding-top:10px;display:grid;gap:5px;font-size:12.5px}
+.res .row{display:flex;justify-content:space-between;gap:8px}
+.res .row span:first-child{color:var(--ink2);font-weight:600}
+.res .row .v{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink);text-align:right}
+.res .sub{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+.res .cost{display:flex;justify-content:space-between;font-weight:800;font-size:13.5px;border-top:1px solid var(--line2);margin-top:5px;padding-top:6px}
+.res .cost .v{color:var(--amber-d)}
+.add{width:100%;border:1.5px dashed var(--steel);background:rgba(47,111,143,.06);color:var(--steel);font:inherit;font-weight:800;font-size:13.5px;padding:12px;border-radius:11px;cursor:pointer}
+.add:active{background:rgba(47,111,143,.14)}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:14px 6px 18px;font-weight:600}
+.secttl{font-size:12px;font-weight:800;color:var(--steel);text-transform:uppercase;letter-spacing:.08em;margin:6px 2px 9px;display:flex;align-items:center;gap:8px}
+.secttl::after{content:"";flex:1;height:1px;background:var(--line)}
+.subttl{margin:12px 2px 8px;color:var(--steel);font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--ink);color:var(--paper2);padding:9px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 16px rgba(19,32,46,.3)}
+.bottom .lab{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--amber)}
+.bottom .tot{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;line-height:1.05}
+.bottom .sm{font-size:11px;color:#9aa6b1;font-family:'IBM Plex Mono',monospace}
+.bottom .go{margin-left:auto;background:var(--amber);color:var(--ink);border:0;font:inherit;font-weight:800;padding:10px 14px;border-radius:9px;cursor:pointer;font-size:13px}
+.bottom .go:active{background:var(--amber-d)}
+.sumcard{background:var(--paper2);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow)}
+.sumcard h3{background:var(--ink);color:var(--paper2);padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sumcard h3 .t{font-family:'IBM Plex Mono',monospace;color:var(--amber);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:7px 14px;border-bottom:1px solid var(--line2)}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800;background:#efeee7}
+td.n,th.n{text-align:right;font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+tr.sub td{font-weight:800;background:#efeee7}
+.grand{background:var(--ink);color:var(--paper2);border-radius:12px;padding:16px 16px 18px;margin-bottom:14px}
+.grand .line{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.grand .line .v{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.grand .big{font-size:16px;font-weight:800;border:0;padding-top:13px}
+.grand .big .v{font-size:25px;color:var(--amber)}
+.grand .muted{color:#9aa6b1;font-size:12px}
+.pillrow{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
+.pill{background:var(--paper2);border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-size:12px;font-weight:700;display:flex;gap:7px;align-items:center}
+.pill b{font-family:'IBM Plex Mono',monospace;color:var(--amber-d)}
+.btnrow{display:flex;gap:9px;margin:4px 0 18px}
+.btnrow button{flex:1;border:1.5px solid var(--ink);background:var(--paper2);color:var(--ink);font:inherit;font-weight:800;font-size:13px;padding:12px;border-radius:10px;cursor:pointer}
+.btnrow button.fill{background:var(--ink);color:var(--paper2)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.5;margin:2px 2px 20px}
+.note b{color:var(--ink2)}
+.tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:5px;background:var(--amber-soft);color:var(--amber-d)}
+.tag.g{background:#d6ead9;color:var(--green)}
+.hint{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600}
+@media print{header,.bottom,.add,.del,.btnrow,.tabs,.intro{display:none!important}body{padding:0;background:#fff}.view{display:block!important}main{max-width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">F</div>
+    <div><h1>Construction Estimator</h1><small>Fajardo / PH Method</small></div>
+    <div class="bagtog" id="bagTog"><button data-bag="40" class="on">40 kg</button><button data-bag="50">50 kg</button></div>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+<main id="main"></main>
+<div class="bottom">
+  <div>
+    <div class="lab">Client Quote (with markup)</div>
+    <div class="tot" id="botClient">₱0</div>
+    <div class="sm" id="botInternal">Your cost ₱0</div>
+  </div>
+  <button class="go" onclick="go('client')">Summary ›</button>
+</div>
+
+<script>
+/* ===========================================================================
+   CONSTRUCTION ESTIMATOR — Fajardo simplified tables + PH trade practice
+   Material coefficients: Fajardo Tables 1-2 (concrete), 2-2 (CHB mortar),
+   2-4 (plaster), d²/162 steel weights. Accessory/finish/MEP rates follow
+   common PH takeoff practice. Wages default to NCR Wage Order NCR-26 (₱695).
+   EVERYTHING in Setup is editable.
+   =========================================================================== */
+
+/* ---------- Fajardo coefficient tables ---------- */
+const CONCRETE={'40':{AA:12.0,A:9.0,B:7.5,C:6.0},'50':{AA:9.5,A:7.0,B:6.0,C:5.0}};
+const CHB={'4':{name:'4" (10×20×40)',mortar:{A:.792,B:.522,C:.394,D:.328},sand:.0435},
+           '6':{name:'6" (15×20×40)',mortar:{A:1.526,B:1.018,C:.763,D:.633},sand:.0844},
+           '8':{name:'8" (20×20×40)',mortar:{A:2.260,B:1.500,C:1.125,D:.938},sand:.1250}};
+const CHB_PER_SQM=12.5;
+const PLAS_THK=[8,12,16,20,25];
+const PLASTER={A:[.144,.216,.288,.360,.450],B:[.096,.144,.192,.240,.300],C:[.072,.108,.144,.180,.225],D:[.060,.090,.120,.150,.188]};
+const PLAS_SAND=[.008,.012,.016,.020,.025];
+const BAR_DIA=[8,10,12,16,20,25,28,32];
+const barW=d=>(d*d)/162;                       // kg per metre
+const TILE={'20':25,'25':16,'30':11.11,'40':6.25,'50':4,'60':2.78};
+const BOARD={'2.88':'1.2×2.4 m (2.88 m²)','3.6':'1.2×3.0 m (3.60 m²)'};
+
+/* ---------- editable defaults (PHP, reference) ---------- */
+const S={
+  bag:'40',
+  project:{name:'',loc:''},
+  waste:{concrete:5,chb:5,tile:8,paint:5,rebar:5},
+  markupDefault:40,
+  markup:{earthworks:30,concrete:35,rebar:35,formwork:35,steel:40,chb:40,plaster:40,roofing:40,
+          carpentry:45,ceiling:45,tile:45,doors:45,paint:50,waterproofing:50,electrical:45,plumbing:45},
+  wage:{skilled:900,unskilled:695},      // NCR: labor worker (non-agri minimum) ₱695
+  price:{
+    cement:260,sand:1400,gravel:1500,chb4:14,chb6:22,chb8:30,rebar:65,tiewire:80,
+    phenolic:1250,gipipe:480,lumber:55,formoil:120,nails:90,
+    steel:80,weldrod:140,cuttingdisc:35,redoxide:480,
+    roofing:560,purlin:120,tekscrew:3,ridge:280,gutter:320,downspout:180,sealant:180,crivet:0.6,
+    cfurring:95,ccarrying:135,cwallangle:55,cwclip:5,changer:18,chclip:4,cscrew:0.8,
+    mstud:160,mtrack:150,rockwool:280,dwscrew:0.8,
+    adhesive:330,grout:60,spacer:80,tiletrim:75,
+    skimcoat:35,flatwall:160,latex:200,k202:38,acrycast:95,enamel:210,woodprimer:200,sandpaper:12,putty:45,
+    nervia:120,nerviamesh:35,leakplug:180,crystor:150,ivl:180,
+    hinge:55,lockset:650,waterproof:380,soilpoison:65
+  },
+  prod:{
+    concrete:{out:5,sk:1,un:5,u:'cu.m'}, formwork:{out:12,sk:1,un:1,u:'sq.m'}, rebar:{out:200,sk:1,un:1,u:'kg'},
+    chb:{out:7,sk:1,un:1,u:'sq.m'}, plaster:{out:8,sk:1,un:1,u:'sq.m'}, tile:{out:7,sk:1,un:1,u:'sq.m'},
+    paint:{out:35,sk:1,un:0,u:'sq.m'}, earthwork:{out:3,sk:0,un:2,u:'cu.m'}, steel:{out:150,sk:1,un:1,u:'kg'},
+    roofing:{out:30,sk:1,un:1,u:'sq.m'}, carpentry:{out:40,sk:1,un:0,u:'bd.ft'}, drywall:{out:10,sk:1,un:1,u:'sq.m'},
+    ceiling:{out:12,sk:1,un:1,u:'sq.m'}, waterproof:{out:25,sk:1,un:1,u:'sq.m'}
+  },
+  cov:{
+    tiewirePct:2,rodPct:1.5,discPerKg:0.005,redoxidePerKg:0.004,
+    plyReuse:3,giPerSqm:1.5,formOilPerSqm:0.05,
+    purlinSpacing:0.6,tekPerSqm:6,roofRivetPerSqm:1.5,roofSealantPerSqm:0.06,
+    furSpace:0.40,carrySpace:1.0,hangerSpace:1.20,ceilScrewPerBoard:16,rivetSpace:0.30,
+    studSpace:0.40,dwScrewPerSqm:24,
+    adhesivePerSqm:0.16,groutPerSqm:0.45,spacerPerSqm:0.05,
+    drypackCementPerCuM:6.0,drypackSandPerCuM:1.0,drypackBedThk:0.025,
+    skimPerSqm:0.8,primerCoats:2,finishCoats:3,paintCover:8,k202PerSqm:1.2,sandpaperPerSqm:0.12,
+    nerviaPerSqm:1.5,wpCoats:2,meshFactor:1.1,leakPlugPerPen:1.0,crystorPerSqm:1.0,
+    ivlDosePerBag:1.0,fittingPct:25,pipeLength:3
+  },
+  items:{earthworks:[],concrete:[],rebar:[],formwork:[],steel:[],chb:[],plaster:[],roofing:[],
+         carpentry:[],ceiling:[],tile:[],doors:[],paint:[],waterproofing:[],electrical:[],plumbing:[]}
+};
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const num=v=>{v=parseFloat(v);return isNaN(v)?0:v};
+const money=v=>'₱'+Math.round(v).toLocaleString('en-PH');
+const q=(v,d=2)=>(isFinite(v)?v:0).toLocaleString('en-PH',{minimumFractionDigits:d,maximumFractionDigits:d});
+const up=v=>Math.ceil(v-1e-9);
+const wf=p=>1+num(p)/100;
+const cementP=()=>S.price.cement;
+const bagConv=b40=>S.bag==='40'?b40:b40*(40/50);   // convert 40kg-basis bag count to selected size
+const chbP=sz=>sz==='4'?S.price.chb4:sz==='6'?S.price.chb6:S.price.chb8;
+
+/* worker-day labour from output-per-day + worker make-up */
+function labor(kind,qty){
+  const p=S.prod[kind]; if(!p||p.out<=0) return {sk:0,un:0,days:0,cost:0};
+  const teamDays=qty/p.out, sk=teamDays*p.sk, un=teamDays*p.un;
+  return {sk,un,days:teamDays,cost:sk*S.wage.skilled+un*S.wage.unskilled};
+}
+function inlineLab(sk,un){return {sk,un,days:Math.max(sk,un),cost:sk*S.wage.skilled+un*S.wage.unskilled}}
+const sumP=mats=>mats.reduce((s,m)=>s+(m.price||0),0);
+
+/* ===========================================================================
+   PER-ITEM CALCULATORS  → {mats:[{n,v,exact?,price,info?}], matCost, lab, head}
+   =========================================================================== */
+function calcEarthwork(it){
+  const k=it.kind||'exc',n=Math.max(1,num(it.n));
+  if(k==='soil'){const a=num(it.L)*num(it.W)*n;const md=a/120;
+    return {mats:[{n:'Soil poisoning (termite)',v:q(a,2)+' sq.m',exact:a,price:a*S.price.soilpoison}],
+      matCost:a*S.price.soilpoison,lab:inlineLab(0,md),head:`${q(a,2)} sq.m treated`};}
+  const vol=num(it.L)*num(it.W)*num(it.D)*n,lab=labor('earthwork',vol);
+  if(k==='gravel') return {mats:[{n:'Gravel bedding',v:q(vol,3)+' cu.m',exact:vol,price:vol*S.price.gravel}],matCost:vol*S.price.gravel,lab,head:`${q(vol,3)} cu.m gravel bed`};
+  const L=k==='back'?'Backfill':'Excavation';
+  return {mats:[{n:L,v:q(vol,2)+' cu.m',exact:vol,price:0}],matCost:0,lab,head:`${q(vol,2)} cu.m ${L.toLowerCase()}`};
+}
+function calcConcrete(it){
+  const vol=num(it.L)*num(it.W)*num(it.T)*Math.max(1,num(it.n))*wf(S.waste.concrete);
+  const cls=it.cls||'A',cement=vol*CONCRETE[S.bag][cls],sand=vol*0.5,gravel=vol*1.0;
+  const mats=[
+    {n:`Cement (${S.bag}kg)`,v:up(cement)+' bags',exact:cement,price:up(cement)*cementP()},
+    {n:'Sand',v:q(sand,3)+' cu.m',exact:sand,price:sand*S.price.sand},
+    {n:'Gravel',v:q(gravel,3)+' cu.m',exact:gravel,price:gravel*S.price.gravel}
+  ];
+  if(it.iwl==='yes'){const ivl=cement*S.cov.ivlDosePerBag;
+    mats.push({n:'Integral waterproofing (IWL)',v:q(ivl,1)+' L',exact:ivl,price:ivl*S.price.ivl});}
+  return {vol,mats,matCost:sumP(mats),lab:labor('concrete',vol),
+    head:`${q(vol,3)} cu.m · Class ${cls}${it.iwl==='yes'?' · IWL':''}`};
+}
+function calcRebar(it){
+  const w=barW(num(it.dia)),L=num(it.len)*wf(S.waste.rebar),kg=L*w,pcs=up(L/num(it.comm||6)),tw=kg*(S.cov.tiewirePct/100);
+  return {mats:[
+    {n:`⌀${it.dia}mm rebar`,v:pcs+' lengths',exact:pcs,price:kg*S.price.rebar},
+    {n:'   = weight',v:q(kg,1)+' kg',price:0,info:true},
+    {n:'Tie wire (#16)',v:q(tw,2)+' kg',exact:tw,price:tw*S.price.tiewire}
+  ],matCost:kg*S.price.rebar+tw*S.price.tiewire,lab:labor('rebar',kg),head:`${q(kg,1)} kg · ${pcs} lengths`};
+}
+function calcFormwork(it){
+  const a=num(it.area)*wf(5);
+  const board=a/(2.88*Math.max(1,S.cov.plyReuse));      // phenolic 4×8 with reuse
+  const gi=a*S.cov.giPerSqm; const giPcs=gi/6;           // GI pipe shoring (6m)
+  const bf=a*1.2; const nails=bf*0.03; const oil=a*S.cov.formOilPerSqm;
+  const bp=num(it.board)||S.price.phenolic;
+  const mats=[
+    {n:'Phenolic board (4×8)',v:up(board)+' pcs',exact:board,price:up(board)*bp},
+    {n:'G.I. pipe shoring',v:up(giPcs)+' pcs',exact:giPcs,price:up(giPcs)*S.price.gipipe},
+    {n:'Lumber bracing',v:q(bf,1)+' bd.ft',exact:bf,price:bf*S.price.lumber},
+    {n:'C.W. nails',v:q(nails,2)+' kg',exact:nails,price:nails*S.price.nails},
+    {n:'Form release oil',v:q(oil,2)+' L',exact:oil,price:oil*S.price.formoil}
+  ];
+  return {mats,matCost:sumP(mats),lab:labor('formwork',a),head:`${q(a,2)} sq.m contact area`};
+}
+function calcSteel(it){
+  const kg=num(it.kg)*Math.max(1,num(it.n||1))*wf(5);
+  const rod=kg*(S.cov.rodPct/100),disc=kg*S.cov.discPerKg,prim=kg*S.cov.redoxidePerKg;
+  const mats=[
+    {n:`Steel — ${it.kind||'fabricated'}`,v:q(kg,1)+' kg',exact:kg,price:kg*S.price.steel},
+    {n:'Welding electrodes',v:q(rod,2)+' kg',exact:rod,price:rod*S.price.weldrod},
+    {n:'Cutting/grinding disc',v:up(disc)+' pcs',exact:disc,price:up(disc)*S.price.cuttingdisc},
+    {n:'Red oxide primer',v:q(prim,2)+' L',exact:prim,price:prim*S.price.redoxide}
+  ];
+  return {mats,matCost:sumP(mats),lab:labor('steel',kg),head:`${q(kg,1)} kg ${it.kind||''}`};
+}
+function calcCHB(it){
+  const area=num(it.L)*num(it.H)*Math.max(1,num(it.n));
+  const cls=it.mortar||'B',sz=it.sz||'4',qy=Math.max(1,num(it.n));
+  const blocks=area*CHB_PER_SQM*wf(S.waste.chb);
+  const mCem=bagConv(area*CHB[sz].mortar[cls]),mSand=area*CHB[sz].sand;
+  const mats=[
+    {n:`${CHB[sz].name} CHB`,v:up(blocks)+' pcs',exact:blocks,price:up(blocks)*chbP(sz)},
+    {n:`Cement — mortar (${S.bag}kg)`,v:up(mCem)+' bags',exact:mCem,price:up(mCem)*cementP()},
+    {n:'Sand — mortar',v:q(mSand,3)+' cu.m',exact:mSand,price:mSand*S.price.sand}
+  ];
+  const faces=num(it.faces);
+  if(faces>0){const ti=PLAS_THK.indexOf(num(it.pthk||16)),pc=it.pcls||'B';
+    const pCem=bagConv(area*faces*PLASTER[pc][ti]),pSand=area*faces*PLAS_SAND[ti];
+    mats.push({n:`Cement — plaster (${S.bag}kg)`,v:up(pCem)+' bags',exact:pCem,price:up(pCem)*cementP()});
+    mats.push({n:'Sand — plaster',v:q(pSand,3)+' cu.m',exact:pSand,price:pSand*S.price.sand});}
+  // reinforcement: vertical bars + horizontal dowels
+  let barKg=0;
+  const vd=num(it.vdia),vs=num(it.vspace),hd=num(it.hdia),hs=num(it.hspace),Lw=num(it.L),Hw=num(it.H);
+  if(vd>0&&vs>0&&Lw>0){const cnt=(Math.floor(Lw/vs)+1)*qy;const tot=cnt*Hw;const kg=tot*barW(vd);barKg+=kg;
+    mats.push({n:`Vertical bars ⌀${vd}mm`,v:up(tot/6)+' lengths',exact:up(tot/6),price:kg*S.price.rebar});}
+  if(hd>0&&hs>0&&Hw>0){const cnt=(Math.floor(Hw/hs)+1)*qy;const tot=cnt*Lw;const kg=tot*barW(hd);barKg+=kg;
+    mats.push({n:`Horizontal dowels ⌀${hd}mm`,v:up(tot/6)+' lengths',exact:up(tot/6),price:kg*S.price.rebar});}
+  if(barKg>0){const tw=barKg*(S.cov.tiewirePct/100);
+    mats.push({n:'Tie wire (#16)',v:q(tw,2)+' kg',exact:tw,price:tw*S.price.tiewire});}
+  const lab=labor('chb',area),labP=faces>0?labor('plaster',area*faces):{sk:0,un:0,days:0,cost:0},labR=labor('rebar',barKg);
+  const L2={sk:lab.sk+labP.sk+labR.sk,un:lab.un+labP.un+labR.un,days:lab.days+labP.days+labR.days,cost:lab.cost+labP.cost+labR.cost};
+  return {area,mats,matCost:sumP(mats),lab:L2,head:`${q(area,2)} sq.m · ${CHB[sz].name}${faces>0?' · plaster '+faces+'F':''}${barKg>0?' · reinforced':''}`};
+}
+function calcPlaster(it){
+  const area=num(it.area)*Math.max(1,num(it.faces));
+  const cls=it.cls||'B',ti=PLAS_THK.indexOf(num(it.thk||16));
+  const cem=bagConv(area*PLASTER[cls][ti]),sand=area*PLAS_SAND[ti];
+  const mats=[
+    {n:`Cement (${S.bag}kg)`,v:up(cem)+' bags',exact:cem,price:up(cem)*cementP()},
+    {n:'Sand',v:q(sand,3)+' cu.m',exact:sand,price:sand*S.price.sand}
+  ];
+  return {area,mats,matCost:sumP(mats),lab:labor('plaster',area),head:`${q(area,2)} sq.m · ${it.thk||16}mm · Class ${cls}`};
+}
+function calcRoofing(it){
+  const a=num(it.area)*wf(8),tek=a*S.cov.tekPerSqm,pur=num(it.area)/Math.max(.1,S.cov.purlinSpacing);
+  const riv=a*S.cov.roofRivetPerSqm,seal=a*S.cov.roofSealantPerSqm;
+  const ridge=num(it.ridge),gut=num(it.gutter),dn=num(it.down);
+  const mats=[
+    {n:'Roofing sheets (long-span)',v:q(a,2)+' sq.m',exact:a,price:a*S.price.roofing},
+    {n:'C-purlins',v:q(pur,1)+' m',exact:pur,price:pur*S.price.purlin},
+    {n:'Tek/self-drilling screws',v:up(tek)+' pcs',exact:tek,price:up(tek)*S.price.tekscrew},
+    {n:'Blind rivets',v:up(riv)+' pcs',exact:riv,price:up(riv)*S.price.crivet},
+    {n:'Roof sealant',v:up(seal)+' tubes',exact:seal,price:up(seal)*S.price.sealant}
+  ];
+  if(ridge>0)mats.push({n:'Ridge roll',v:q(ridge,1)+' m',exact:ridge,price:ridge*S.price.ridge});
+  if(gut>0)mats.push({n:'Gutter',v:q(gut,1)+' m',exact:gut,price:gut*S.price.gutter});
+  if(dn>0)mats.push({n:'Downspout',v:q(dn,1)+' m',exact:dn,price:dn*S.price.downspout});
+  return {mats,matCost:sumP(mats),lab:labor('roofing',num(it.area)),head:`${q(num(it.area),2)} sq.m roof`};
+}
+function calcCarpentry(it){
+  if((it.type||'lumber')==='drywall'){
+    const A=num(it.area),faces=Math.max(1,num(it.faces)),H=num(it.height)||3,ba=num(it.bsize)||2.88;
+    const board=A*faces*wf(5)/ba, stud=A/Math.max(.1,S.cov.studSpace), track=2*(A/H), scr=A*faces*S.cov.dwScrewPerSqm/100*100;
+    const bp=num(it.unit)||0;
+    const mats=[
+      {n:`Board — ${it.kind||'ficem'}`,v:up(board)+' pcs',exact:board,price:up(board)*bp},
+      {n:'Metal stud (3m)',v:up(stud/3)+' pcs',exact:stud/3,price:up(stud/3)*S.price.mstud},
+      {n:'Metal track (3m)',v:up(track/3)+' pcs',exact:track/3,price:up(track/3)*S.price.mtrack},
+      {n:'Drywall screws',v:up(A*faces*S.cov.dwScrewPerSqm)+' pcs',exact:A*faces*S.cov.dwScrewPerSqm,price:up(A*faces*S.cov.dwScrewPerSqm)*S.price.dwscrew}
+    ];
+    if(it.rockwool==='yes')mats.push({n:'Rockwool insulation',v:q(A,2)+' sq.m',exact:A,price:A*S.price.rockwool});
+    return {mats,matCost:sumP(mats),lab:labor('drywall',A),head:`${q(A,2)} sq.m · ${faces}-face drywall`};
+  }
+  const d=(it.size||'2x2').split('x').map(Number),t=d[0]||2,w=d[1]||2,Lft=num(it.len)*3.28084;
+  const bf=(t*w*Lft)/12*Math.max(1,num(it.n))*wf(5),nails=bf*0.02;
+  const mats=[
+    {n:`Lumber ${it.size||''}`,v:q(bf,1)+' bd.ft',exact:bf,price:bf*S.price.lumber},
+    {n:'Nails (assorted)',v:q(nails,2)+' kg',exact:nails,price:nails*S.price.nails}
+  ];
+  return {mats,matCost:sumP(mats),lab:labor('carpentry',bf),head:`${q(bf,1)} bd.ft · ${it.size} ×${it.n||1}`};
+}
+function calcCeiling(it){
+  const A=num(it.area),a=A*wf(5),ba=num(it.bsize)||2.88;
+  const fs=Math.max(.1,S.cov.furSpace),cs=Math.max(.1,S.cov.carrySpace),hs=Math.max(.1,S.cov.hangerSpace);
+  const perim=num(it.perim)>0?num(it.perim):4*Math.sqrt(A);
+  const board=a/ba,furLM=A/fs,carLM=A/cs,wclip=A/(fs*cs),hang=carLM/hs;
+  const riv=perim/Math.max(.05,S.cov.rivetSpace)+wclip*0.5,scr=board*S.cov.ceilScrewPerBoard;
+  const bp=num(it.unit)||0,P=S.price;
+  const mats=[
+    {n:`Board — ${it.kind||'ceiling'}`,v:up(board)+' pcs',exact:board,price:up(board)*bp},
+    {n:'Double furring (5m)',v:up(furLM/5)+' pcs',exact:furLM/5,price:up(furLM/5)*P.cfurring},
+    {n:'Carrying channel (5m)',v:up(carLM/5)+' pcs',exact:carLM/5,price:up(carLM/5)*P.ccarrying},
+    {n:'Wall angle (3m)',v:up(perim/3)+' pcs',exact:perim/3,price:up(perim/3)*P.cwallangle},
+    {n:'W-clip (furring clip)',v:up(wclip)+' pcs',exact:wclip,price:up(wclip)*P.cwclip},
+    {n:'Hanger rod / pull-thread',v:up(hang)+' pcs',exact:hang,price:up(hang)*P.changer},
+    {n:'Hanger clip (rod clip)',v:up(hang)+' pcs',exact:hang,price:up(hang)*P.chclip},
+    {n:'Blind rivets',v:up(riv)+' pcs',exact:riv,price:up(riv)*P.crivet},
+    {n:'Metal/ceiling screws',v:up(scr)+' pcs',exact:scr,price:up(scr)*P.cscrew}
+  ];
+  return {mats,matCost:sumP(mats),lab:labor('ceiling',A),head:`${q(A,2)} sq.m · furring @${fs}m, carrying @${cs}m`};
+}
+function calcTile(it){
+  const a=num(it.area),sz=it.sz||'30',per=TILE[sz]||(1/Math.pow(num(sz)/100,2));
+  const pcs=a*per*wf(S.waste.tile),grout=a*S.cov.groutPerSqm,spc=a*S.cov.spacerPerSqm,trim=num(it.trim);
+  const mats=[
+    {n:`Tiles ${sz}×${sz}cm`,v:up(pcs)+' pcs',exact:pcs,price:up(pcs)*num(it.unit)},
+    {n:'Tile grout',v:q(grout,2)+' kg',exact:grout,price:grout*S.price.grout},
+    {n:'Tile spacers',v:up(spc)+' packs',exact:spc,price:up(spc)*S.price.spacer}
+  ];
+  if((it.setting||'adhesive')==='drypack'){            // 1:5 cement-sand mortar bed (walls/floors)
+    const bed=num(it.bed)||S.cov.drypackBedThk,vol=a*bed;
+    const cem=bagConv(vol*S.cov.drypackCementPerCuM),sand=vol*S.cov.drypackSandPerCuM;
+    mats.unshift({n:'Sand — drypack',v:q(sand,3)+' cu.m',exact:sand,price:sand*S.price.sand});
+    mats.unshift({n:`Cement — drypack 1:5 (${S.bag}kg)`,v:up(cem)+' bags',exact:cem,price:up(cem)*cementP()});
+  }else{
+    const adh=a*S.cov.adhesivePerSqm;
+    mats.splice(1,0,{n:'Tile adhesive',v:up(adh)+' bags',exact:adh,price:up(adh)*S.price.adhesive});
+  }
+  if(trim>0)mats.push({n:'Edge/corner trim',v:q(trim,1)+' m',exact:trim,price:trim*S.price.tiletrim});
+  return {mats,matCost:sumP(mats),lab:labor('tile',a),head:`${q(a,2)} sq.m · ${sz}×${sz}cm · ${(it.setting||'adhesive')==='drypack'?'1:5 drypack':'adhesive'}`};
+}
+function calcPaint(it){
+  const A=num(it.area),sub=it.sub||'int',cov=Math.max(.1,S.cov.paintCover),w=wf(S.waste.paint);
+  const pc=S.cov.primerCoats,fc=S.cov.finishCoats,P=S.price,mats=[];
+  const primeL=A*pc/cov*w, finL=A*fc/cov*w, skim=A*S.cov.skimPerSqm, sand=A*S.cov.sandpaperPerSqm;
+  if(sub==='int'){
+    mats.push({n:'Skimcoat / Boral',v:q(skim,1)+' kg',exact:skim,price:skim*P.skimcoat});
+    mats.push({n:`Flat wall primer (${pc} coats)`,v:q(primeL,1)+' L',exact:primeL,price:primeL*P.flatwall});
+    mats.push({n:`Latex finish (${fc} coats)`,v:q(finL,1)+' L',exact:finL,price:finL*P.latex});
+  }else if(sub==='ext'){
+    mats.push({n:'Skimcoat (patch)',v:q(skim*0.5,1)+' kg',exact:skim*0.5,price:skim*0.5*P.skimcoat});
+    mats.push({n:`Masonry primer (${pc} coats)`,v:q(primeL,1)+' L',exact:primeL,price:primeL*P.flatwall});
+    const fin=it.fin||'k202';
+    if(fin==='k202'){const kg=A*S.cov.k202PerSqm*w;mats.push({n:'Textured finish K-202',v:q(kg,1)+' kg',exact:kg,price:kg*P.k202});}
+    else if(fin==='acrycast'){mats.push({n:'Acrycast textured',v:q(finL,1)+' L',exact:finL,price:finL*P.acrycast});}
+    else mats.push({n:`Elastomeric/latex (${fc} coats)`,v:q(finL,1)+' L',exact:finL,price:finL*P.latex});
+  }else if(sub==='wood'){
+    mats.push({n:'Wood putty',v:q(skim,1)+' kg',exact:skim,price:skim*P.putty});
+    mats.push({n:`Sanding sealer/primer (${pc} coats)`,v:q(primeL,1)+' L',exact:primeL,price:primeL*P.woodprimer});
+    mats.push({n:`Enamel finish (${fc} coats)`,v:q(finL,1)+' L',exact:finL,price:finL*P.enamel});
+  }else{ // metal
+    mats.push({n:`Red oxide primer (${pc} coats)`,v:q(primeL,1)+' L',exact:primeL,price:primeL*P.redoxide});
+    mats.push({n:`QDE enamel (${fc} coats)`,v:q(finL,1)+' L',exact:finL,price:finL*P.enamel});
+  }
+  mats.push({n:'Sandpaper',v:up(sand)+' pcs',exact:sand,price:up(sand)*P.sandpaper});
+  const subN={int:'Interior masonry',ext:'Exterior masonry',wood:'Wood',metal:'Metal'}[sub];
+  return {mats,matCost:sumP(mats),lab:labor('paint',A*(pc+fc)/2),head:`${q(A,2)} sq.m · ${subN}`};
+}
+function calcWaterproof(it){
+  const A=num(it.area),a=A*wf(5),sys=it.sys||'toilet',pen=Math.max(0,num(it.pen)),P=S.price,C=S.cov,mats=[];
+  const nervia=a*C.nerviaPerSqm*C.wpCoats, mesh=a*C.meshFactor, leak=pen*C.leakPlugPerPen, cry=a*C.crystorPerSqm;
+  let ratio='';
+  if(sys==='toilet'||sys==='balcony'){
+    mats.push({n:'Nervia Buildrite',v:q(nervia,1)+' kg',exact:nervia,price:nervia*P.nervia});
+    mats.push({n:'Nervia mesh / fabric',v:q(mesh,2)+' sq.m',exact:mesh,price:mesh*P.nerviamesh});
+    if(leak>0)mats.push({n:'Leak plug (hydraulic)',v:q(leak,1)+' kg',exact:leak,price:leak*P.leakplug});
+    ratio='Nervia Buildrite ≈ 2 powder : 1 liquid, 2 coats';
+  }else if(sys==='pool'){
+    mats.push({n:'Crystor crystalline',v:q(cry,1)+' kg',exact:cry,price:cry*P.crystor});
+    if(leak>0)mats.push({n:'Leak plug (hydraulic)',v:q(leak,1)+' kg',exact:leak,price:leak*P.leakplug});
+    ratio='Crystor ≈ slurry coat per bag + water; brush 2 coats';
+  }else{
+    mats.push({n:'Nervia Buildrite',v:q(nervia,1)+' kg',exact:nervia,price:nervia*P.nervia});
+    mats.push({n:'Nervia mesh / fabric',v:q(mesh,2)+' sq.m',exact:mesh,price:mesh*P.nerviamesh});
+    ratio='Nervia Buildrite ≈ 2 powder : 1 liquid, 2 coats';
+  }
+  return {mats,matCost:sumP(mats),lab:labor('waterproof',A),head:`${q(A,2)} sq.m · ${sys} · ${ratio}`};
+}
+function calcElectrical(it){
+  const qty=Math.max(0,num(it.n)),mat=qty*num(it.unit),md=qty*num(it.hrs)/8;
+  const isWire=/wire/i.test(it.kind||'');
+  return {mats:[{n:it.kind||'Electrical item',v:qty+(isWire?' m':' pcs'),exact:qty,price:mat}],
+    matCost:mat,lab:inlineLab(md,md*0.6),head:`${qty} × ${it.kind||'point'}`};
+}
+function calcPlumbing(it){
+  if((it.kind||'pipe')==='pipe'){
+    const lm=num(it.len)*wf(5),pcs=up(lm/Math.max(.1,S.cov.pipeLength)),base=lm*num(it.unit),fit=base*(S.cov.fittingPct/100),md=lm/30;
+    return {mats:[
+      {n:`PVC pipe ${it.size||''}`,v:pcs+' pcs',exact:pcs,price:base},
+      {n:`Fittings (${S.cov.fittingPct}%)`,v:'allowance',exact:0,price:fit}
+    ],matCost:base+fit,lab:inlineLab(md,md*0.6),head:`${q(lm,1)} m ${it.size||''} pipe`};
+  }
+  const qty=Math.max(1,num(it.n)),mat=qty*num(it.unit),md=qty*num(it.hrs)/8;
+  return {mats:[{n:it.fixture||'Fixture',v:qty+' sets',exact:qty,price:mat}],
+    matCost:mat,lab:inlineLab(md,md*0.6),head:`${qty} × ${it.fixture||'fixture'}`};
+}
+const CALC={earthworks:calcEarthwork,concrete:calcConcrete,rebar:calcRebar,formwork:calcFormwork,steel:calcSteel,
+  chb:calcCHB,plaster:calcPlaster,roofing:calcRoofing,carpentry:calcCarpentry,ceiling:calcCeiling,tile:calcTile,
+  doors:calcDoors,paint:calcPaint,waterproofing:calcWaterproof,electrical:calcElectrical,plumbing:calcPlumbing};
+function calcDoors(it){
+  const qty=Math.max(1,num(it.n)),isDoor=/door/i.test(it.kind||''),md=qty*num(it.hrs)/8;
+  const mats=[{n:`${it.kind||'Unit'} ${it.size||''}`.trim(),v:qty+' sets',exact:qty,price:qty*num(it.unit)}];
+  if(isDoor){const hinges=qty*3,locks=qty;
+    mats.push({n:'Hinges (loose-pin)',v:hinges+' pcs',exact:hinges,price:hinges*S.price.hinge});
+    mats.push({n:'Lockset',v:locks+' sets',exact:locks,price:locks*S.price.lockset});}
+  return {mats,matCost:sumP(mats),lab:inlineLab(md,md*0.5),head:`${qty} × ${it.kind||'unit'} ${it.size||''}`};
+}
+
+/* ===========================================================================
+   TABS + FIELD SCHEMAS
+   =========================================================================== */
+const TABS=[
+  {id:'setup',name:'Setup'},{id:'earthworks',name:'Earthworks'},{id:'concrete',name:'Concrete'},
+  {id:'rebar',name:'Rebar'},{id:'formwork',name:'Formworks'},{id:'steel',name:'Steel'},
+  {id:'chb',name:'Masonry'},{id:'plaster',name:'Plaster'},{id:'roofing',name:'Roofing'},
+  {id:'carpentry',name:'Carpentry/Drywall'},{id:'ceiling',name:'Ceiling'},{id:'tile',name:'Tile'},
+  {id:'doors',name:'Doors/Win'},{id:'paint',name:'Painting'},{id:'waterproofing',name:'Waterproofing'},
+  {id:'electrical',name:'Electrical'},{id:'plumbing',name:'Plumbing'},
+  {id:'client',name:'Client ★'},{id:'internal',name:'Internal'}
+];
+const TITLES={earthworks:'Earthworks',concrete:'Concrete',rebar:'Reinforcing Steel',formwork:'Formworks',
+  steel:'Steel Works',chb:'CHB Masonry',plaster:'Plastering',roofing:'Roofing',carpentry:'Carpentry / Drywall',
+  ceiling:'Ceiling',tile:'Tile Works',doors:'Doors & Windows',paint:'Painting',waterproofing:'Waterproofing',
+  electrical:'Electrical',plumbing:'Plumbing / Sanitary'};
+
+function fld(label,unit,key,it,kind,idx,opts){
+  const val=it[key]??'';
+  if(opts){const o=opts.map(([v,t])=>`<option value="${v}" ${String(val)===String(v)?'selected':''}>${t}</option>`).join('');
+    return `<label class="f"><span class="lbl"><span>${label}</span>${unit?`<span class="u">${unit}</span>`:''}</span><select onchange="upd('${kind}',${idx},'${key}',this.value)">${o}</select></label>`;}
+  return `<label class="f"><span class="lbl"><span>${label}</span>${unit?`<span class="u">${unit}</span>`:''}</span><input inputmode="decimal" value="${val}" placeholder="0" oninput="upd('${kind}',${idx},'${key}',this.value)"></label>`;
+}
+function tfld(label,key,it,kind,idx,ph){
+  return `<label class="f txt" style="grid-column:1/-1"><span class="lbl"><span>${label}</span></span><input value="${it[key]??''}" placeholder="${ph||''}" oninput="upd('${kind}',${idx},'${key}',this.value)"></label>`;
+}
+const mixOpts=[['AA','AA (1:1½:3)'],['A','A (1:2:4)'],['B','B (1:2½:5)'],['C','C (1:3:6)']];
+const mortarOpts=[['A','A (1:2)'],['B','B (1:3)'],['C','C (1:4)'],['D','D (1:5)']];
+const plasClsOpts=[['A','Class A'],['B','Class B'],['C','Class C'],['D','Class D']];
+const thkOpts=PLAS_THK.map(t=>[t,t+' mm']);
+const diaOpts=BAR_DIA.map(d=>[d,'⌀'+d+' mm']);
+const sizeOpts=[['4','4" (10×20×40)'],['6','6" (15×20×40)'],['8','8" (20×20×40)']];
+const tileOpts=[['20','20×20'],['25','25×25'],['30','30×30'],['40','40×40'],['50','50×50'],['60','60×60']];
+const faceOpts=[['0','None'],['1','1 face'],['2','2 faces']];
+const yesNo=[['no','No'],['yes','Yes']];
+const ewKindOpts=[['exc','Excavation'],['gravel','Gravel bedding'],['back','Backfill'],['soil','Soil poisoning']];
+const steelKindOpts=[['Trusses','Roof trusses'],['Purlins','Purlins/girts'],['Railing','Steel railing'],['Stair','Stair stringer'],['Column','Steel column/beam'],['Gate','Gate/grille']];
+const lumberSizeOpts=[['1x2','1×2'],['2x2','2×2'],['2x3','2×3'],['2x4','2×4'],['2x6','2×6'],['2x8','2×8'],['3x3','3×3']];
+const ficemOpts=[['Ficem 3.5mm','Fiber cement 3.5mm'],['Ficem 4.5mm','Fiber cement 4.5mm'],['Ficem 6mm','Fiber cement 6mm'],['Gypsum 9mm','Gypsum 9mm'],['Gypsum 12mm','Gypsum 12mm'],['MR Gypsum 12mm','MR (moisture-res) Gypsum 12mm']];
+const ceilBoardOpts=[['Ficem 4.5mm','Fiber cement 4.5mm'],['Ficem 6mm','Fiber cement 6mm'],['Gypsum 9mm','Gypsum 9mm (regular)'],['Gypsum 12mm','Gypsum 12mm'],['MR Gypsum 9mm','MR Gypsum 9mm'],['MR Gypsum 12mm','MR Gypsum 12mm'],['Marine ¼"','Marine ply ¼"']];
+const boardSizeOpts=[['2.88','1.2×2.4 m (2.88 m²)'],['3.6','1.2×3.0 m (3.60 m²)']];
+const carpTypeOpts=[['lumber','Lumber framing (bd.ft)'],['drywall','Drywall partition']];
+const dwKindOpts=[['Panel door','Panel door'],['Flush door','Flush door'],['PVC door','PVC door'],['Aluminum sliding','Aluminum sliding window'],['Awning window','Awning window'],['Steel casement','Steel casement']];
+const tileSetOpts=[['adhesive','Adhesive (thin-set)'],['drypack','1:5 cement-sand drypack']];
+const paintSubOpts=[['int','Interior masonry'],['ext','Exterior masonry'],['wood','Wood'],['metal','Metal']];
+const paintFinOpts=[['k202','Textured K-202'],['acrycast','Acrycast textured'],['latex','Elastomeric / latex']];
+const wpSysOpts=[['toilet','Toilet / T&B'],['balcony','Balcony / deck'],['pool','Swimming pool'],['gen','General slab']];
+const elecKindOpts=[['Convenience outlet (duplex)','Convenience outlet (duplex)'],['Weatherproof outlet','Weatherproof outlet'],
+  ['1-way switch','1-way switch'],['2-way switch','2-way switch'],['3-way switch','3-way switch'],
+  ['Lighting outlet','Lighting outlet'],['Aircon outlet 20A','Aircon outlet 20A'],['Range outlet 30A','Range outlet 30A'],
+  ['CATV outlet','CATV (cable TV) outlet'],['Data/Internet outlet','Data / Internet (RJ45) outlet'],['Telephone outlet','Telephone outlet'],
+  ['Junction box','Junction box'],['Utility box','Utility box'],['Circuit breaker','Circuit breaker (bolt-on)'],['Panel board','Panel board / load center'],
+  ['THHN wire 2.0mm²','THHN wire 2.0mm²'],['THHN wire 3.5mm²','THHN wire 3.5mm²'],['THHN wire 5.5mm²','THHN wire 5.5mm²'],['THHN wire 8.0mm²','THHN wire 8.0mm²'],['THHN wire 14mm²','THHN wire 14mm²'],
+  ['PVC conduit','PVC conduit'],['Service entrance','Service entrance']];
+const plumbKindOpts=[['pipe','Pipe run'],['fixture','Fixture / device']];
+const pipeSizeOpts=[['½" CW','½" CW supply'],['¾" CW','¾" CW supply'],['2" PVC','2" PVC (waste)'],['3" PVC','3" PVC'],['4" PVC','4" PVC (soil)'],['1" PPR','1" PPR']];
+const fixtureOpts=[['Water closet','Water closet'],['Lavatory','Lavatory'],['Lavatory faucet','Lavatory faucet'],['Kitchen sink','Kitchen sink'],['Floor drain 2"','Floor drain 2"'],['Shower set','Shower set'],['Hose bibb/faucet','Hose bibb / faucet'],['Cleanout','Cleanout'],['P-trap','P-trap'],['Grease trap','Grease trap']];
+
+function itemFields(kind,it,idx){
+  switch(kind){
+    case 'earthworks':{const soil=(it.kind||'exc')==='soil';
+      return `${tfld('Label','label',it,kind,idx,'e.g. Footing F1')}<div class="grid g2">
+      ${fld('Type','','kind',it,kind,idx,ewKindOpts)}${fld('Quantity','pcs','n',it,kind,idx)}
+      ${fld('Length','m','L',it,kind,idx)}${fld('Width','m','W',it,kind,idx)}
+      ${soil?'':fld('Depth / Thickness','m','D',it,kind,idx)}</div>`;}
+    case 'concrete':return `${tfld('Element (footing, column, slab…)','label',it,kind,idx,'e.g. Column C1')}<div class="grid g2">
+      ${fld('Length','m','L',it,kind,idx)}${fld('Width','m','W',it,kind,idx)}
+      ${fld('Thickness/Depth','m','T',it,kind,idx)}${fld('Quantity','pcs','n',it,kind,idx)}
+      ${fld('Mixture class','','cls',it,kind,idx,mixOpts)}${fld('Integral WP (IWL)','','iwl',it,kind,idx,yesNo)}</div>
+      <div class="hint">Set Integral WP = Yes for toilet, pool &amp; balcony slabs (adds IWL admixture).</div>`;
+    case 'rebar':return `${tfld('Element','label',it,kind,idx,'e.g. Beam main bars')}<div class="grid g2">
+      ${fld('Bar diameter','','dia',it,kind,idx,diaOpts)}${fld('Commercial length','m','comm',it,kind,idx)}
+      ${fld('Total length needed','m','len',it,kind,idx)}</div>`;
+    case 'formwork':return `${tfld('Element','label',it,kind,idx,'e.g. Slab soffit')}<div class="grid g2">
+      ${fld('Contact area','sq.m','area',it,kind,idx)}${fld('Phenolic unit price','₱/pc','board',it,kind,idx)}</div>
+      <div class="hint">Phenolic board + G.I. pipe shoring + lumber bracing + form oil + nails. Reuse factor in Setup.</div>`;
+    case 'steel':return `${tfld('Label','label',it,kind,idx,'e.g. Roof trusses')}<div class="grid g2">
+      ${fld('Member type','','kind',it,kind,idx,steelKindOpts)}${fld('Quantity','sets','n',it,kind,idx)}
+      ${fld('Weight (each / total)','kg','kg',it,kind,idx)}</div>`;
+    case 'chb':return `${tfld('Wall','label',it,kind,idx,'e.g. Perimeter fence')}<div class="grid g2">
+      ${fld('CHB size','','sz',it,kind,idx,sizeOpts)}${fld('Mortar class','','mortar',it,kind,idx,mortarOpts)}
+      ${fld('Length','m','L',it,kind,idx)}${fld('Height','m','H',it,kind,idx)}
+      ${fld('No. of walls','pcs','n',it,kind,idx)}${fld('Plaster','','faces',it,kind,idx,faceOpts)}
+      ${fld('Plaster thickness','','pthk',it,kind,idx,thkOpts)}${fld('Plaster class','','pcls',it,kind,idx,plasClsOpts)}</div>
+      <div class="subttl">Reinforcement (vertical bars &amp; horizontal dowels)</div><div class="grid g2">
+      ${fld('Vertical bar ⌀','','vdia',it,kind,idx,[['','none']].concat(diaOpts))}${fld('Vertical spacing','m','vspace',it,kind,idx)}
+      ${fld('Horizontal dowel ⌀','','hdia',it,kind,idx,[['','none']].concat(diaOpts))}${fld('Horizontal spacing','m','hspace',it,kind,idx)}</div>`;
+    case 'plaster':return `${tfld('Area','label',it,kind,idx,'e.g. Interior walls')}<div class="grid g2">
+      ${fld('Area (one face)','sq.m','area',it,kind,idx)}${fld('No. of faces','','faces',it,kind,idx)}
+      ${fld('Thickness','','thk',it,kind,idx,thkOpts)}${fld('Mixture class','','cls',it,kind,idx,plasClsOpts)}</div>`;
+    case 'roofing':return `${tfld('Label','label',it,kind,idx,'e.g. Main roof')}<div class="grid g2">
+      ${fld('Roof area (actual slope)','sq.m','area',it,kind,idx)}${fld('Ridge roll','m','ridge',it,kind,idx)}
+      ${fld('Gutter','m','gutter',it,kind,idx)}${fld('Downspout','m','down',it,kind,idx)}</div>`;
+    case 'carpentry':{const dw=(it.type||'lumber')==='drywall';
+      let f=`${tfld('Member / partition','label',it,kind,idx,'e.g. Bathroom partition')}<div class="grid g2">${fld('Work type','','type',it,kind,idx,carpTypeOpts)}`;
+      if(dw){f+=`${fld('Board type','','kind',it,kind,idx,ficemOpts)}${fld('Board size','','bsize',it,kind,idx,boardSizeOpts)}
+        ${fld('Board unit price','₱/pc','unit',it,kind,idx)}${fld('Area','sq.m','area',it,kind,idx)}
+        ${fld('Height','m','height',it,kind,idx)}${fld('No. of faces','','faces',it,kind,idx,[['1','1 face'],['2','2 faces']])}
+        ${fld('Rockwool insulation','','rockwool',it,kind,idx,yesNo)}</div>
+        <div class="hint">Studs &amp; U-track from spacing (Setup); board both faces if 2-face.</div>`;}
+      else{f+=`${fld('Lumber size','in','size',it,kind,idx,lumberSizeOpts)}${fld('Length each','m','len',it,kind,idx)}${fld('Quantity','pcs','n',it,kind,idx)}</div>`;}
+      return f;}
+    case 'ceiling':return `${tfld('Area','label',it,kind,idx,'e.g. Bedroom ceiling')}<div class="grid g2">
+      ${fld('Board type','','kind',it,kind,idx,ceilBoardOpts)}${fld('Board size','','bsize',it,kind,idx,boardSizeOpts)}
+      ${fld('Board unit price','₱/pc','unit',it,kind,idx)}${fld('Ceiling area','sq.m','area',it,kind,idx)}
+      ${fld('Wall perimeter','m','perim',it,kind,idx)}</div>
+      <div class="hint">Furring, carrying channel, wall angle, W-clips, hangers, rivets &amp; screws auto-computed. Blank perimeter ≈ from area.</div>`;
+    case 'tile':{const dp=(it.setting||'adhesive')==='drypack';
+      return `${tfld('Area','label',it,kind,idx,'e.g. T&B wall')}<div class="grid g2">
+      ${fld('Area','sq.m','area',it,kind,idx)}${fld('Tile size','cm','sz',it,kind,idx,tileOpts)}
+      ${fld('Tile unit price','₱/pc','unit',it,kind,idx)}${fld('Setting','','setting',it,kind,idx,tileSetOpts)}
+      ${dp?fld('Drypack bed','m','bed',it,kind,idx):''}${fld('Edge/corner trim','m','trim',it,kind,idx)}</div>
+      <div class="hint">Walls commonly use 1:5 cement-sand drypack — gives cement &amp; sand. Grout + spacers always added.</div>`;}
+    case 'doors':return `${tfld('Schedule mark','label',it,kind,idx,'e.g. D-1')}<div class="grid g2">
+      ${fld('Type','','kind',it,kind,idx,dwKindOpts)}${fld('Quantity','sets','n',it,kind,idx)}
+      ${fld('Unit price (supply)','₱ each','unit',it,kind,idx)}${fld('Install time','hrs each','hrs',it,kind,idx)}</div>
+      ${tfld('Size','size',it,kind,idx,'e.g. 0.90 × 2.10 m')}`;
+    case 'paint':{const ext=(it.sub||'int')==='ext';
+      return `${tfld('Area','label',it,kind,idx,'e.g. Exterior walls')}<div class="grid g2">
+      ${fld('Substrate','','sub',it,kind,idx,paintSubOpts)}${ext?fld('Exterior finish','','fin',it,kind,idx,paintFinOpts):fld('Area','sq.m','area',it,kind,idx)}
+      ${ext?fld('Area','sq.m','area',it,kind,idx):''}</div>
+      <div class="hint">System = primer (${S.cov.primerCoats} coats) + finish (${S.cov.finishCoats} coats) + skimcoat. Coat counts editable in Setup; final color is your selection.</div>`;}
+    case 'waterproofing':{const pen=/toilet|balcony|pool/.test(it.sys||'toilet');
+      return `${tfld('Area','label',it,kind,idx,'e.g. T&B floor & walls')}<div class="grid g2">
+      ${fld('System / location','','sys',it,kind,idx,wpSysOpts)}${fld('Area','sq.m','area',it,kind,idx)}
+      ${pen?fld('Pipe penetrations','pcs','pen',it,kind,idx):''}</div>
+      <div class="hint">Toilet/balcony: Nervia Buildrite + Nervia mesh + leak plug. Pool: Crystor + leak plug. Ratios shown on each line.</div>`;}
+    case 'electrical':return `${tfld('Description','label',it,kind,idx,'optional note')}<div class="grid g2">
+      ${fld('Item / point','','kind',it,kind,idx,elecKindOpts)}${fld('Quantity (pcs or m)','','n',it,kind,idx)}
+      ${fld('Unit cost','₱ each','unit',it,kind,idx)}${fld('Labor','hrs each','hrs',it,kind,idx)}</div>
+      <div class="hint">THHN colour code: red/black = line, white = neutral, green = ground. Wire qty = metres.</div>`;
+    case 'plumbing':{const pipe=(it.kind||'pipe')==='pipe';
+      let f=`${tfld('Description','label',it,kind,idx,'optional note')}<div class="grid g2">${fld('Type','','kind',it,kind,idx,plumbKindOpts)}`;
+      if(pipe){f+=`${fld('Pipe size (RNPCP)','','size',it,kind,idx,pipeSizeOpts)}${fld('Total length','m','len',it,kind,idx)}${fld('Pipe price','₱/m','unit',it,kind,idx)}</div>
+        <div class="hint">RNPCP sizes: soil 4", waste/vent 2", CW supply ½"–¾". Fittings auto-added (Setup %).</div>`;}
+      else{f+=`${fld('Fixture','','fixture',it,kind,idx,fixtureOpts)}${fld('Quantity','sets','n',it,kind,idx)}${fld('Unit price','₱ each','unit',it,kind,idx)}${fld('Labor','hrs each','hrs',it,kind,idx)}</div>`;}
+      return f;}
+  }
+}
+
+/* ===========================================================================
+   RENDER
+   =========================================================================== */
+let cur='setup';
+function renderTabs(){
+  $('#tabs').innerHTML=TABS.map(t=>{const c=(S.items[t.id]&&S.items[t.id].length)||0;
+    return `<button class="tab ${t.id===cur?'on':''}" onclick="go('${t.id}')">${t.name}${c?`<span class="dot">${c}</span>`:''}</button>`;}).join('');
+}
+function go(id){cur=id;renderTabs();render();window.scrollTo(0,0)}
+function render(){renderTabs();
+  if(cur==='setup')return renderSetup();
+  if(cur==='client')return renderSummary(true);
+  if(cur==='internal')return renderSummary(false);
+  renderItems(cur);updateBottom();}
+
+const INTRO={
+  earthworks:'Excavation, gravel bedding, backfill &amp; soil poisoning. Gravel priced; dig/backfill labor-only.',
+  concrete:'Fajardo <b>Table 1-2</b> (cement bags/cu.m by class). Integral waterproofing (IWL) toggle for wet areas.',
+  rebar:'Bars by ⌀ (weight = d²⁄162) + tie wire. Add a line per diameter.',
+  formwork:'Phenolic board (with reuse) + G.I. pipe shoring + lumber bracing + form oil + nails.',
+  steel:'Fabricated steel by weight: steel, electrodes, cutting discs, red-oxide primer.',
+  chb:'12.5 CHB/sq.m, mortar <b>Table 2-2</b>, plaster <b>Table 2-4</b> + vertical bars &amp; horizontal dowels.',
+  plaster:'Standalone plastering, <b>Table 2-4</b> (cement bags/sq.m/face by thickness &amp; class).',
+  roofing:'Long-span sheets, C-purlins, tek screws, rivets, sealant + ridge, gutter &amp; downspout.',
+  carpentry:'Switch between lumber framing (bd.ft) and drywall partition (ficem/gypsum/MR + metal stud + track + rockwool).',
+  ceiling:'Full suspended system: board, double furring, carrying channel, wall angle, W-clips, hanger rods/clips, rivets &amp; screws.',
+  tile:'Tiles by size + grout + spacers. Walls use 1:5 cement-sand drypack (gives cement &amp; sand).',
+  doors:'Supply + install by set. Doors auto-add 3 hinges + lockset each.',
+  paint:'PH system by substrate: skimcoat/Boral, primer (2 coats), finish (3 coats). Exterior = K-202 / Acrycast.',
+  waterproofing:'Product systems by location: Nervia Buildrite + mesh + leak plug; pools use Crystor. Mixing ratios shown.',
+  electrical:'Outlets, 1/2/3-way switches, CATV, data &amp; telephone outlets, THHN wire by size, breakers, conduit.',
+  plumbing:'RNPCP-sized PVC pipe runs (+fittings) and toilet fixtures (WC, lavatory, floor drain, etc.).'
+};
+const BLANK={
+  earthworks:{label:'',kind:'exc',n:1,L:'',W:'',D:''},
+  concrete:{label:'',L:'',W:'',T:'',n:1,cls:'A',iwl:'no'},
+  rebar:{label:'',dia:12,comm:6,len:''},
+  formwork:{label:'',area:'',board:''},
+  steel:{label:'',kind:'Trusses',n:1,kg:''},
+  chb:{label:'',sz:'4',mortar:'B',L:'',H:'',n:1,faces:'2',pthk:16,pcls:'B',vdia:'',vspace:'',hdia:'',hspace:''},
+  plaster:{label:'',area:'',faces:1,thk:16,cls:'B'},
+  roofing:{label:'',area:'',ridge:'',gutter:'',down:''},
+  carpentry:{label:'',type:'lumber',size:'2x3',len:'',n:1,kind:'Ficem 4.5mm',bsize:'2.88',unit:'',area:'',height:'3',faces:'2',rockwool:'no'},
+  ceiling:{label:'',kind:'Ficem 4.5mm',bsize:'2.88',unit:'',area:'',perim:''},
+  tile:{label:'',area:'',sz:'30',unit:'',setting:'adhesive',bed:'',trim:''},
+  doors:{label:'',kind:'Panel door',n:1,unit:'',hrs:8,size:''},
+  paint:{label:'',sub:'int',fin:'k202',area:''},
+  waterproofing:{label:'',sys:'toilet',area:'',pen:''},
+  electrical:{label:'',kind:'Convenience outlet (duplex)',n:1,unit:'',hrs:2},
+  plumbing:{label:'',kind:'pipe',size:'½" CW',len:'',unit:'',n:1,fixture:'Water closet',hrs:4}
+};
+function renderItems(kind){
+  if(!S.items[kind])S.items[kind]=[];
+  const items=S.items[kind];
+  let h=`<div class="view on"><div class="intro">${INTRO[kind]}</div>`;
+  if(!items.length)h+=`<div class="empty">No items yet. Tap below to add your first ${TITLES[kind].toLowerCase()} entry.</div>`;
+  items.forEach((it,i)=>{const r=CALC[kind](it);
+    h+=`<div class="card item"><div class="card-head"><span class="idx">${i+1}</span><h3>${it.label||TITLES[kind]+' #'+(i+1)}</h3><button class="del" onclick="rm('${kind}',${i})">×</button></div>
+      ${itemFields(kind,it,i)}<div class="res"><div class="sub">${r.head}</div>`;
+    r.mats.forEach(m=>{if(m.info){h+=`<div class="row" style="opacity:.6"><span>${m.n}</span><span class="v">${m.v}</span></div>`;}
+      else h+=`<div class="row"><span>${m.n}</span><span class="v">${m.v}</span></div>`;});
+    h+=`<div class="sub">Labor — ${q(r.lab.sk,2)} skilled-worker-days + ${q(r.lab.un,2)} labor-worker-days</div>
+      <div class="cost"><span>Item cost (your price)</span><span class="v">${money(r.matCost+r.lab.cost)}</span></div></div></div>`;});
+  h+=`<button class="add" onclick="addItem('${kind}')">+ Add ${TITLES[kind]} item</button></div>`;
+  $('#main').innerHTML=h;
+}
+function addItem(kind){if(!S.items[kind])S.items[kind]=[];S.items[kind].push(JSON.parse(JSON.stringify(BLANK[kind])));save();render()}
+function rm(kind,i){S.items[kind].splice(i,1);save();render()}
+function upd(kind,i,key,val){S.items[kind][i][key]=val;save();
+  if(/^(kind|type|setting|sub|sys)$/.test(key)){render();return;}   // layout-changing selects
+  liveRefresh(kind);updateBottom();}
+let rt=null;
+function liveRefresh(kind){clearTimeout(rt);rt=setTimeout(()=>{
+  const items=S.items[kind],cards=document.querySelectorAll('.card.item');
+  items.forEach((it,i)=>{const r=CALC[kind](it),card=cards[i];if(!card)return;const res=card.querySelector('.res');if(!res)return;
+    let html=`<div class="sub">${r.head}</div>`;
+    r.mats.forEach(m=>html+=`<div class="row"${m.info?' style="opacity:.6"':''}><span>${m.n}</span><span class="v">${m.v}</span></div>`);
+    html+=`<div class="sub">Labor — ${q(r.lab.sk,2)} skilled-worker-days + ${q(r.lab.un,2)} labor-worker-days</div>
+      <div class="cost"><span>Item cost (your price)</span><span class="v">${money(r.matCost+r.lab.cost)}</span></div>`;
+    res.innerHTML=html;const head=card.querySelector('.card-head h3');if(head)head.textContent=it.label||'';});},120);}
+
+/* ---------- SETUP ---------- */
+function setVal(k,v){const p=k.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];o[p[p.length-1]]=v;save();updateBottom();}
+function renderSetup(){
+  const P=S.price,W=S.wage,WS=S.waste,C=S.cov,MK=S.markup;
+  const f=(l,k,v,u)=>`<label class="f"><span class="lbl"><span>${l}</span>${u?`<span class="u">${u}</span>`:''}</span><input inputmode="decimal" value="${v}" oninput="setVal('${k}',this.value)"></label>`;
+  const tf=(l,k,v,ph)=>`<label class="f txt"><span class="lbl"><span>${l}</span></span><input value="${v}" placeholder="${ph||''}" oninput="setVal('${k}',this.value)"></label>`;
+  let h=`<div class="view on">
+   <div class="intro"><b>How it works:</b> add line items per trade. Materials follow the Fajardo tables &amp; PH practice; labor uses worker-output rates. Everything is editable. Two summaries: <b>Client</b> (with markup) and <b>Internal</b> (your real cost).</div>
+   <div class="secttl">Project</div><div class="card"><div class="grid g2">${tf('Project name','project.name',S.project.name,'My House Project')}${tf('Location','project.loc',S.project.loc,'City / Province')}</div></div>
+
+   <div class="secttl">Worker Daily Wages <span class="tag">NCR-26 = ₱695</span></div>
+   <div class="card"><div class="grid g2">
+     ${f('Skilled worker (mason/carpenter)','wage.skilled',W.skilled,'₱/day')}
+     ${f('Labor worker (helper)','wage.unskilled',W.unskilled,'₱/day')}
+   </div><div class="hint">Labor = worker-days × wage. Default labor worker = ₱695 (NCR non-agri minimum, Wage Order NCR-26, 2025–26).</div></div>
+
+   <div class="secttl">Client Markup <span class="tag">% per trade</span></div>
+   <div class="card">${f('Default markup (all trades)','markupDefault',S.markupDefault,'%')}
+   <div class="subttl">Per-trade override</div><div class="grid g2">`;
+  Object.keys(TITLES).forEach(k=>{h+=f(TITLES[k],'markup.'+k,MK[k]!=null?MK[k]:S.markupDefault,'%');});
+  h+=`</div><div class="hint">Client price = your cost × (1 + markup). Internal summary shows your real cost (no markup).</div></div>
+
+   <div class="secttl">Material Unit Prices <span class="tag">PHP · editable</span></div>
+   <div class="card"><div class="grid g2">
+     ${f('Cement / bag','price.cement',P.cement,'₱')}${f('Sand','price.sand',P.sand,'₱/cu.m')}
+     ${f('Gravel','price.gravel',P.gravel,'₱/cu.m')}${f('Rebar','price.rebar',P.rebar,'₱/kg')}
+     ${f('Tie wire','price.tiewire',P.tiewire,'₱/kg')}${f('CHB 4"','price.chb4',P.chb4,'₱/pc')}
+     ${f('CHB 6"','price.chb6',P.chb6,'₱/pc')}${f('CHB 8"','price.chb8',P.chb8,'₱/pc')}
+     ${f('Nails (assorted)','price.nails',P.nails,'₱/kg')}${f('Soil poisoning','price.soilpoison',P.soilpoison,'₱/sq.m')}
+   </div>
+   <div class="subttl">Formworks &amp; steel</div><div class="grid g2">
+     ${f('Phenolic board (4×8)','price.phenolic',P.phenolic,'₱/pc')}${f('G.I. pipe (6m)','price.gipipe',P.gipipe,'₱/pc')}
+     ${f('Lumber','price.lumber',P.lumber,'₱/bd.ft')}${f('Form release oil','price.formoil',P.formoil,'₱/L')}
+     ${f('Structural steel','price.steel',P.steel,'₱/kg')}${f('Welding electrode','price.weldrod',P.weldrod,'₱/kg')}
+     ${f('Cutting/grinding disc','price.cuttingdisc',P.cuttingdisc,'₱/pc')}${f('Red oxide primer','price.redoxide',P.redoxide,'₱/L')}
+   </div>
+   <div class="subttl">Roofing</div><div class="grid g2">
+     ${f('Roofing sheet','price.roofing',P.roofing,'₱/sq.m')}${f('C-purlin','price.purlin',P.purlin,'₱/m')}
+     ${f('Tek screw','price.tekscrew',P.tekscrew,'₱/pc')}${f('Blind rivet','price.crivet',P.crivet,'₱/pc')}
+     ${f('Roof sealant','price.sealant',P.sealant,'₱/tube')}${f('Ridge roll','price.ridge',P.ridge,'₱/m')}
+     ${f('Gutter','price.gutter',P.gutter,'₱/m')}${f('Downspout','price.downspout',P.downspout,'₱/m')}
+   </div>
+   <div class="subttl">Ceiling &amp; drywall system</div><div class="grid g2">
+     ${f('Double furring (5m)','price.cfurring',P.cfurring,'₱/pc')}${f('Carrying channel (5m)','price.ccarrying',P.ccarrying,'₱/pc')}
+     ${f('Wall angle (3m)','price.cwallangle',P.cwallangle,'₱/pc')}${f('W-clip','price.cwclip',P.cwclip,'₱/pc')}
+     ${f('Hanger rod/pull-thread','price.changer',P.changer,'₱/pc')}${f('Hanger clip','price.chclip',P.chclip,'₱/pc')}
+     ${f('Ceiling screw','price.cscrew',P.cscrew,'₱/pc')}${f('Metal stud (3m)','price.mstud',P.mstud,'₱/pc')}
+     ${f('Metal track (3m)','price.mtrack',P.mtrack,'₱/pc')}${f('Rockwool','price.rockwool',P.rockwool,'₱/sq.m')}
+     ${f('Drywall screw','price.dwscrew',P.dwscrew,'₱/pc')}
+   </div>
+   <div class="subttl">Tile</div><div class="grid g2">
+     ${f('Tile adhesive','price.adhesive',P.adhesive,'₱/bag')}${f('Tile grout','price.grout',P.grout,'₱/kg')}
+     ${f('Tile spacers','price.spacer',P.spacer,'₱/pack')}${f('Edge trim','price.tiletrim',P.tiletrim,'₱/m')}
+   </div>
+   <div class="subttl">Paint system</div><div class="grid g2">
+     ${f('Skimcoat / Boral','price.skimcoat',P.skimcoat,'₱/kg')}${f('Flat wall primer','price.flatwall',P.flatwall,'₱/L')}
+     ${f('Latex finish','price.latex',P.latex,'₱/L')}${f('Textured K-202','price.k202',P.k202,'₱/kg')}
+     ${f('Acrycast','price.acrycast',P.acrycast,'₱/L')}${f('Enamel (QDE)','price.enamel',P.enamel,'₱/L')}
+     ${f('Wood primer','price.woodprimer',P.woodprimer,'₱/L')}${f('Wood putty','price.putty',P.putty,'₱/kg')}
+     ${f('Sandpaper','price.sandpaper',P.sandpaper,'₱/pc')}
+   </div>
+   <div class="subttl">Waterproofing</div><div class="grid g2">
+     ${f('Nervia Buildrite','price.nervia',P.nervia,'₱/kg')}${f('Nervia mesh','price.nerviamesh',P.nerviamesh,'₱/sq.m')}
+     ${f('Leak plug','price.leakplug',P.leakplug,'₱/kg')}${f('Crystor','price.crystor',P.crystor,'₱/kg')}
+     ${f('Integral WP (IWL)','price.ivl',P.ivl,'₱/L')}
+   </div>
+   <div class="subttl">Doors hardware</div><div class="grid g2">
+     ${f('Door hinge','price.hinge',P.hinge,'₱/pc')}${f('Door lockset','price.lockset',P.lockset,'₱/set')}
+   </div>
+   <div class="hint">Tiles, ceiling/drywall boards, doors, electrical &amp; plumbing items also use a unit price entered on each line.</div></div>
+
+   <div class="secttl">Worker Output (per 8-hr day)</div><div class="card">`;
+  const labels={concrete:'Concrete pour',formwork:'Formworks',rebar:'Rebar',chb:'CHB laying',plaster:'Plastering',tile:'Tile setting',paint:'Painting',earthwork:'Excavation',steel:'Steel fabrication',roofing:'Roofing',carpentry:'Carpentry (bd.ft)',drywall:'Drywall (sq.m)',ceiling:'Ceiling',waterproof:'Waterproofing'};
+  Object.keys(S.prod).forEach(k=>{const p=S.prod[k];
+    h+=`<div style="margin-bottom:10px"><div class="subttl" style="margin:0 0 6px">${labels[k]}</div><div class="grid g3">
+      ${f('Output','prod.'+k+'.out',p.out,p.u+'/day')}${f('Skilled','prod.'+k+'.sk',p.sk,'workers')}${f('Labor','prod.'+k+'.un',p.un,'workers')}</div></div>`;});
+  h+=`</div>
+   <div class="secttl">Waste Allowances <span class="tag">%</span></div><div class="card"><div class="grid g3">
+     ${f('Concrete','waste.concrete',WS.concrete,'%')}${f('CHB','waste.chb',WS.chb,'%')}${f('Tile','waste.tile',WS.tile,'%')}${f('Paint','waste.paint',WS.paint,'%')}${f('Rebar','waste.rebar',WS.rebar,'%')}</div></div>
+
+   <div class="secttl">Detailed Component Rates</div><div class="card"><div class="grid g2">
+     ${f('Tie wire','cov.tiewirePct',C.tiewirePct,'% of steel')}${f('Weld rod','cov.rodPct',C.rodPct,'% of steel')}
+     ${f('Phenolic reuse','cov.plyReuse',C.plyReuse,'times')}${f('G.I. pipe','cov.giPerSqm',C.giPerSqm,'m/sq.m')}
+     ${f('Purlin spacing','cov.purlinSpacing',C.purlinSpacing,'m c/c')}${f('Tek screws','cov.tekPerSqm',C.tekPerSqm,'pcs/sq.m')}
+     ${f('Furring spacing','cov.furSpace',C.furSpace,'m c/c')}${f('Carrying spacing','cov.carrySpace',C.carrySpace,'m c/c')}
+     ${f('Hanger spacing','cov.hangerSpace',C.hangerSpace,'m c/c')}${f('Ceiling screws','cov.ceilScrewPerBoard',C.ceilScrewPerBoard,'pcs/board')}
+     ${f('Stud spacing (drywall)','cov.studSpace',C.studSpace,'m c/c')}${f('Drywall screws','cov.dwScrewPerSqm',C.dwScrewPerSqm,'pcs/sq.m')}
+     ${f('Adhesive','cov.adhesivePerSqm',C.adhesivePerSqm,'bag/sq.m')}${f('Grout','cov.groutPerSqm',C.groutPerSqm,'kg/sq.m')}
+     ${f('Drypack bed','cov.drypackBedThk',C.drypackBedThk,'m thick')}${f('Drypack cement','cov.drypackCementPerCuM',C.drypackCementPerCuM,'bag/cu.m')}
+     ${f('Primer coats','cov.primerCoats',C.primerCoats,'coats')}${f('Finish coats','cov.finishCoats',C.finishCoats,'coats')}
+     ${f('Paint coverage','cov.paintCover',C.paintCover,'sq.m/L')}${f('Skimcoat','cov.skimPerSqm',C.skimPerSqm,'kg/sq.m')}
+     ${f('K-202','cov.k202PerSqm',C.k202PerSqm,'kg/sq.m')}${f('Nervia','cov.nerviaPerSqm',C.nerviaPerSqm,'kg/sq.m/coat')}
+     ${f('WP coats','cov.wpCoats',C.wpCoats,'coats')}${f('Leak plug','cov.leakPlugPerPen',C.leakPlugPerPen,'kg/penetration')}
+     ${f('IWL dose','cov.ivlDosePerBag',C.ivlDosePerBag,'L/cement bag')}${f('Pipe fittings','cov.fittingPct',C.fittingPct,'% of pipe')}
+     ${f('Pipe length','cov.pipeLength',C.pipeLength,'m/pc')}
+   </div></div>
+
+   <div class="btnrow"><button onclick="resetAll()">Reset all data</button></div>
+   <div class="note"><b>Accuracy note:</b> Structural quantities follow Engr. Max Fajardo's <i>Simplified Construction Estimate</i> (Tables 1-2, 2-2, 2-4) and d²⁄162 steel weights. Fastener/finish/waterproofing/MEP rates and product coverages are standard PH takeoff references — <b>verify against your suppliers and adjust.</b> Wages default to NCR Wage Order NCR-26 (₱695). Product names (Nervia, Crystor, K-202, Acrycast, Boral) refer to common local brands for clarity; substitute equivalents as needed.</div>
+   </div>`;
+  $('#main').innerHTML=h;updateBottom();
+}
+function resetAll(){if(confirm('Clear all items and reset to defaults?')){localStorage.removeItem('fajardoEst2');location.reload();}}
+
+/* ===========================================================================
+   TRADE AGGREGATION + SUMMARIES
+   =========================================================================== */
+function buildTrades(){
+  const rows=[]; let gMat=0,gLab=0,gSk=0,gUn=0;
+  Object.keys(S.items).forEach(kind=>{
+    const list=S.items[kind]||[]; if(!list.length)return;
+    const agg={}; let mat=0,lab=0,sk=0,un=0;
+    list.forEach(it=>{const r=CALC[kind](it);mat+=r.matCost;lab+=r.lab.cost;sk+=r.lab.sk;un+=r.lab.un;
+      r.mats.forEach(m=>{if(m.info)return;const key=m.n.replace(/\s*\(\d+kg\)/,'').trim();
+        const u=(m.v.match(/[a-zA-Z.²%/]+$/)||[''])[0];
+        if(!agg[key])agg[key]={n:m.n.replace(/\(\d+kg\)/,'('+S.bag+'kg)'),u,qty:0,cost:0};
+        agg[key].qty+=(m.exact!=null?m.exact:0);agg[key].cost+=m.price;});});
+    const mk=num(S.markup[kind]!=null?S.markup[kind]:S.markupDefault);
+    rows.push({kind,title:TITLES[kind],mats:Object.values(agg),mat,lab,sk,un,cost:mat+lab,markup:mk,client:(mat+lab)*(1+mk/100)});
+    gMat+=mat;gLab+=lab;gSk+=sk;gUn+=un;});
+  return {rows,gMat,gLab,gSk,gUn};
+}
+function qtyStr(m){const disc=/pcs|bag|length|sheet|board|screw|set|roll|unit|gal|tube|pack/i.test(m.u||'');
+  return m.qty>0?(disc?up(m.qty)+' '+m.u:q(m.qty,2)+' '+(m.u||'')):'—';}
+function renderSummary(client){
+  const t=buildTrades();
+  const grand=client?t.rows.reduce((s,r)=>s+r.client,0):(t.gMat+t.gLab);
+  let h=`<div class="view on">`;
+  if(S.project.name)h+=`<div style="font-weight:800;font-size:18px;margin:2px 2px 0">${S.project.name}</div>`;
+  h+=`<div class="note" style="margin:2px 2px 10px">${S.project.loc?S.project.loc+' · ':''}${new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'})} · <b>${client?'CLIENT QUOTE (with markup)':'INTERNAL — your real cost'}</b></div>`;
+  h+=`<div class="grand">
+    <div class="line"><span>Materials</span><span class="v">${money(t.gMat)}</span></div>
+    <div class="line"><span>Labor</span><span class="v">${money(t.gLab)}</span></div>`;
+  if(client)h+=`<div class="line"><span>Markup (per trade)</span><span class="v">+${money(grand-t.gMat-t.gLab)}</span></div>`;
+  h+=`<div class="line big"><span>${client?'CLIENT TOTAL':'YOUR TOTAL COST'}</span><span class="v">${money(grand)}</span></div>
+    <div class="muted" style="margin-top:8px">${client?'Quote to present to the client. Per-trade markup set in Setup.':'Real cost to you — no markup. Use this to know your true spend & profit.'}</div></div>`;
+  h+=`<div class="secttl">Labor Force</div><div class="pillrow">
+     <div class="pill">Skilled <b>${q(t.gSk,1)}</b> worker-days</div>
+     <div class="pill">Labor <b>${q(t.gUn,1)}</b> worker-days</div></div>`;
+  // per-trade cards (materials organized per trade)
+  t.rows.forEach(r=>{
+    h+=`<div class="sumcard"><h3><span>${r.title}</span><span class="t">${money(client?r.client:r.cost)}</span></h3>
+      <table><tbody>`;
+    r.mats.forEach(m=>h+=`<tr><td>${m.n}</td><td class="n">${qtyStr(m)}</td><td class="n">${money(m.cost)}</td></tr>`);
+    h+=`<tr><td>Labor (${q(r.sk,1)} sk + ${q(r.un,1)} lbr w-days)</td><td class="n"></td><td class="n">${money(r.lab)}</td></tr>`;
+    h+=`<tr class="sub"><td>${client?'Subtotal × '+(1+r.markup/100).toFixed(2)+' markup':'Trade subtotal'}</td><td class="n"></td><td class="n">${money(client?r.client:r.cost)}</td></tr>`;
+    h+=`</tbody></table></div>`;});
+  if(!t.rows.length)h+=`<div class="empty">No items added yet — add work under the trade tabs.</div>`;
+  h+=`<div class="btnrow"><button class="fill" onclick="window.print()">⎙ Print / Save PDF</button><button onclick="exportCSV(${client})">↓ Export CSV</button></div>
+   <div class="note"><b>${client?'Client':'Internal'} view.</b> Switch tabs to see the ${client?'internal (real cost)':'client (marked-up)'} version. Material coefficients follow Fajardo &amp; PH practice; verify prices with suppliers before bidding.</div></div>`;
+  $('#main').innerHTML=h;updateBottom();
+}
+function exportCSV(client){
+  const t=buildTrades();let rows=[['CONSTRUCTION ESTIMATE — '+(client?'CLIENT QUOTE':'INTERNAL COST')],[S.project.name||'',S.project.loc||''],[]];
+  t.rows.forEach(r=>{rows.push([r.title.toUpperCase()]);rows.push(['Material','Qty','Unit','Cost(PHP)']);
+    r.mats.forEach(m=>rows.push([m.n,m.qty>0?(/pcs|bag|sheet|board|screw|set|tube|pack|length/i.test(m.u)?up(m.qty):m.qty.toFixed(2)):'',m.u,Math.round(m.cost)]));
+    rows.push(['Labor','','',Math.round(r.lab)]);
+    rows.push([client?'Subtotal (×'+(1+r.markup/100).toFixed(2)+')':'Subtotal','','',Math.round(client?r.client:r.cost)]);rows.push([]);});
+  const grand=client?t.rows.reduce((s,r)=>s+r.client,0):(t.gMat+t.gLab);
+  rows.push(['Skilled worker-days',t.gSk.toFixed(1)],['Labor worker-days',t.gUn.toFixed(1)],['GRAND TOTAL','','',Math.round(grand)]);
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=(S.project.name||'estimate')+'-'+(client?'client':'internal')+'.csv';a.click();
+}
+function updateBottom(){const t=buildTrades();const client=t.rows.reduce((s,r)=>s+r.client,0);
+  $('#botClient').textContent=money(client);$('#botInternal').textContent='Your cost '+money(t.gMat+t.gLab);}
+
+/* ---------- persistence (forward-migrates old saves) ---------- */
+const DEFAULTS=JSON.parse(JSON.stringify(S));
+function mergeDefaults(def,saved){
+  if(saved===undefined||saved===null)return JSON.parse(JSON.stringify(def));
+  if(Array.isArray(def))return Array.isArray(saved)?saved:def;
+  if(typeof def==='object'){const o={};for(const k in def)o[k]=mergeDefaults(def[k],saved[k]);
+    for(const k in saved)if(!(k in o))o[k]=saved[k];return o;}
+  return saved;}
+function save(){try{localStorage.setItem('fajardoEst2',JSON.stringify(S));}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem('fajardoEst2'));if(d){const m=mergeDefaults(DEFAULTS,d);Object.keys(m).forEach(k=>S[k]=m[k]);}}catch(e){console.warn('starting fresh',e);}}
+
+/* ---------- bag toggle + boot ---------- */
+$('#bagTog').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  S.bag=b.dataset.bag;[...$('#bagTog').children].forEach(x=>x.classList.toggle('on',x===b));save();render();});
+load();
+[...$('#bagTog').children].forEach(x=>x.classList.toggle('on',x.dataset.bag===S.bag));
+render();
+</script>
+</body>
+</html>
