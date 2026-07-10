@@ -25,7 +25,7 @@
   --r:16px; --r2:12px; --r3:9px;
 }
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --bg:#0b1120; --bg2:#0f172a;
     --glass:rgba(23,32,52,.72); --glass2:rgba(23,32,52,.5);
     --stroke:rgba(255,255,255,.10); --stroke2:rgba(255,255,255,.06);
@@ -34,6 +34,16 @@
     --shadow:0 8px 30px rgba(0,0,0,.45); --shadow2:0 2px 10px rgba(0,0,0,.4);
   }
 }
+:root[data-theme="dark"]{
+  --bg:#0b1120; --bg2:#0f172a;
+  --glass:rgba(23,32,52,.72); --glass2:rgba(23,32,52,.5);
+  --stroke:rgba(255,255,255,.10); --stroke2:rgba(255,255,255,.06);
+  --ink:#f1f5f9; --ink2:#cbd5e1; --muted:#94a3b8; --muted2:#64748b;
+  --brandS:#1e1b4b; --okS:#052e2b; --warnS:#2e2306; --badS:#3a0d0d; --infoS:#0b2540;
+  --shadow:0 8px 30px rgba(0,0,0,.45); --shadow2:0 2px 10px rgba(0,0,0,.4);
+}
+html{transition:none}
+body,.side,.topbar,.card,.btn,.inp,.modal{transition:background-color .25s ease,border-color .25s ease,color .2s ease}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .lu{display:inline-block;vertical-align:middle;flex:none}
 html,body{margin:0;padding:0;height:100%}
@@ -246,6 +256,54 @@ textarea.inp{min-height:84px;resize:vertical;font-family:inherit}
 .rt-table th{background:var(--glass2);font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
 
+/* ---- icon button (topbar cluster) ---- */
+.iconbtn{width:40px;height:40px;border-radius:11px;background:var(--glass2);border:1px solid var(--stroke);
+  display:grid;place-items:center;color:var(--ink2);transition:.15s}
+.iconbtn:hover{color:var(--brand);border-color:var(--brand)}
+.iconbtn:active{transform:scale(.94)}
+
+/* ---- data-engine view toolbar ---- */
+.viewbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.segmented{display:inline-flex;background:var(--glass2);border:1px solid var(--stroke);border-radius:11px;padding:3px;gap:2px}
+.segmented button{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:8px;font-weight:700;font-size:12.5px;color:var(--muted)}
+.segmented button.on{background:var(--glass);color:var(--brand);box-shadow:var(--shadow2)}
+.kanban{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(260px,1fr);gap:12px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x proximity}
+.kcol{background:var(--glass2);border:1px solid var(--stroke2);border-radius:var(--r);padding:10px;min-height:120px;scroll-snap-align:start}
+.kcol .kh{display:flex;align-items:center;gap:8px;font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;padding:0 2px}
+.kcol .kh .cnt{margin-left:auto;background:var(--glass);border:1px solid var(--stroke2);border-radius:20px;padding:1px 8px;font-size:11px}
+.dtable{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;background:var(--glass);border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden}
+.dtable th,.dtable td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--stroke2);white-space:nowrap}
+.dtable th{background:var(--glass2);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800;position:sticky;top:0;cursor:pointer}
+.dtable tr:last-child td{border-bottom:0}
+.dtable tbody tr{cursor:pointer;transition:.12s}
+.dtable tbody tr:hover{background:var(--glass2)}
+.tablewrap{overflow-x:auto;border-radius:var(--r)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal .cd{min-height:74px;background:var(--glass);border:1px solid var(--stroke2);border-radius:10px;padding:6px;font-size:11px}
+.cal .cd .dn{font-weight:800;color:var(--muted)}
+.cal .dot2{display:block;font-size:10px;font-weight:700;background:var(--brandS);color:var(--brand);border-radius:6px;padding:2px 5px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal .head{font-size:10px;font-weight:800;text-transform:uppercase;color:var(--muted);text-align:center;padding:4px 0}
+
+/* ---- skeleton loading ---- */
+.skel{position:relative;overflow:hidden;background:var(--glass2);border-radius:12px}
+.skel::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);animation:shine 1.2s infinite}
+@keyframes shine{to{transform:translateX(100%)}}
+.skel-card{height:150px;margin-bottom:12px}
+
+/* ---- FAB + bottom nav (mobile) ---- */
+.fab{display:none;position:fixed;right:16px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:48;
+  width:58px;height:58px;border-radius:19px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;
+  box-shadow:0 10px 26px rgba(79,70,229,.5);place-items:center;transition:.15s}
+.fab:active{transform:scale(.92)}
+.botnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:50;padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  background:var(--glass);border-top:1px solid var(--stroke);backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);grid-template-columns:repeat(5,1fr)}
+.botnav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:12px;color:var(--muted);font-size:10px;font-weight:700;position:relative}
+.botnav button.on{color:var(--brand)}
+.botnav button.on .lu{transform:translateY(-1px)}
+.botnav button .nb{position:absolute;top:2px;right:calc(50% - 20px);background:var(--bad);color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:9px;display:grid;place-items:center;padding:0 4px}
+.pull{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-weight:600;transition:height .15s}
+
 /* ---- mobile ---- */
 @media(max-width:960px){
   .builder{grid-template-columns:1fr}
@@ -253,15 +311,33 @@ textarea.inp{min-height:84px;resize:vertical;font-family:inherit}
 }
 @media(max-width:820px){
   .app{grid-template-columns:1fr}
-  .side{position:fixed;z-index:70;left:0;top:0;width:270px;transform:translateX(-102%);transition:.25s;box-shadow:var(--shadow)}
+  .side{position:fixed;z-index:70;left:0;top:0;width:280px;transform:translateX(-102%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow)}
   .side.open{transform:none}
-  .menu-btn{display:grid;place-items:center;width:40px;height:40px;border-radius:11px;background:var(--glass2);border:1px solid var(--stroke);font-size:18px}
-  .scrim{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.35);display:none}
-  .scrim.open{display:block}
-  .content{padding:14px}
+  .menu-btn{display:none}
+  .scrim{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.4);display:none}
+  .scrim.open{display:block;animation:fadein .2s}
+  .content{padding:14px 14px calc(88px + env(safe-area-inset-bottom))}
   .f2{grid-template-columns:1fr}
   .topbar h2{font-size:17px}
+  .topbar{padding:12px 14px}
+  .fab{display:grid}
+  .botnav{display:grid}
+  /* bottom-sheet modals with drag handle & big touch targets */
+  .overlay{align-items:flex-end;padding:0}
+  .modal{border-radius:22px 22px 0 0;max-height:90dvh;animation:sheetup .3s cubic-bezier(.4,0,.2,1)}
+  .modal .mh{padding-top:20px}
+  .modal .mh::before{content:"";position:absolute;top:7px;left:50%;transform:translateX(-50%);width:38px;height:4px;border-radius:4px;background:var(--muted2);opacity:.5}
+  .btn{padding:12px 16px}
+  .btn.sm{padding:9px 12px}
+  .inp{padding:12px 13px;font-size:16px}
+  .checkline{padding:12px}
+  .mf .btn{flex:1;justify-content:center}
+  .kanban{grid-auto-columns:82%}
 }
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes sheetup{from{transform:translateY(100%)}to{transform:none}}
+@media(min-width:821px){.hide-desktop{display:none!important}}
+@media(max-width:560px){.hide-sm{display:none!important}}
 </style>
 </head>
 <body>
@@ -270,14 +346,19 @@ textarea.inp{min-height:84px;resize:vertical;font-family:inherit}
   <div class="scrim" id="scrim" data-action="closeNav"></div>
   <div class="main">
     <div class="topbar">
-      <button class="menu-btn" data-action="openNav" id="menuBtn"></button>
+      <button class="menu-btn iconbtn" data-action="openNav" id="menuBtn"></button>
       <div><h2 id="viewTitle">Dashboard</h2><div class="sub" id="viewSub"></div></div>
       <div class="sp"></div>
-      <button class="bell" data-action="notifs" id="bell"></button>
+      <button class="iconbtn" data-action="search" id="searchBtn" title="Search (Ctrl+K)"></button>
+      <button class="iconbtn" data-action="cycleTheme" id="themeBtn" title="Theme"></button>
+      <button class="bell iconbtn" data-action="notifs" id="bell"></button>
     </div>
+    <div class="pull" id="pull"></div>
     <div class="content" id="content"></div>
   </div>
 </div>
+<button class="fab" id="fab" data-action="fab" aria-label="Create"></button>
+<nav class="botnav" id="botnav"></nav>
 <div id="modalRoot"></div>
 <div class="toasts" id="toasts"></div>
 
@@ -602,9 +683,21 @@ const Approval = {
       comments:[],version:1
     };
     if(!steps.length)req.timeline.push({at:Date.now(),by:'System',type:'approved',text:'Auto-approved (no workflow steps)'});
+    await this._runAuto(req,form,'submit');
+    if(!steps.length)await this._runAuto(req,form,'final');
     await Store.upsert('requests',req);
     await this._notifyCurrent(req,form);
     return req;
+  },
+  async _runAuto(req,form,trigger){
+    for(const a of (form?.automations||[])){
+      if(a.on!==trigger)continue;
+      if(a.do==='notify'&&a.role){for(const p of DIR.people.filter(x=>x.role===a.role))await Notify.push(p.id,`Automation: "${req.formName}" — ${trigger}`,req.id);}
+      else if(a.do==='comment'){req.comments.push({by:'Automation',at:Date.now(),text:a.text||'(rule)'});
+        req.timeline.push({at:Date.now(),by:'Automation',type:'auto',text:'Rule: '+(a.text||'comment')});}
+      else if(a.do==='tag'){req.tag=a.text||'';req.timeline.push({at:Date.now(),by:'Automation',type:'auto',text:'Tagged: '+(a.text||'')});}
+      else if(a.do==='archive'){req.timeline.push({at:Date.now(),by:'Automation',type:'auto',text:'Marked for archive'});}
+    }
   },
   async _notifyCurrent(req){
     const step=req.steps[req.currentStep];
@@ -614,6 +707,7 @@ const Approval = {
   },
   async act(req,action,remarks){
     const step=req.steps[req.currentStep];
+    const form=await Store.get('forms',req.formId);
     const evt={at:Date.now(),by:APP.user.name,type:action,text:'',remarks:remarks||''};
     const label={approve:'Approved',reject:'Rejected',return:'Returned',revision:'Requested revision',
       comment:'Commented',delegate:'Delegated',escalate:'Escalated',forward:'Forwarded',cancel:'Cancelled'}[action];
@@ -624,12 +718,16 @@ const Approval = {
       if(step)step.status='approved';
       evt.text=`${label} · ${step?step.name:''}`;
       req.timeline.push(evt);
+      await this._runAuto(req,form,'approve');
       const next=req.currentStep+1;
       if(next>=req.steps.length){req.status='approved';
-        req.timeline.push({at:Date.now(),by:'System',type:'completed',text:'All approvals complete'});}
+        req.timeline.push({at:Date.now(),by:'System',type:'completed',text:'All approvals complete'});
+        await this._runAuto(req,form,'final');
+        await Notify.push(req.submittedBy,`Your "${req.formName}" was fully approved`,req.id);}
       else{req.currentStep=next;req.steps[next].status='pending';await this._notifyCurrent(req);}
     }else if(action==='reject'){
       if(step)step.status='rejected';req.status='rejected';evt.text=`${label} · ${step?step.name:''}`;req.timeline.push(evt);
+      await this._runAuto(req,form,'reject');
       await Notify.push(req.submittedBy,`Your "${req.formName}" was rejected`,req.id);
     }else if(action==='return'||action==='revision'){
       if(step)step.status='pending';req.status=action==='return'?'returned':'revision';
@@ -666,8 +764,21 @@ const Notify = {
 /* ============================================================================
    9 · UI ENGINE  (app state, router, rendering, toasts, modals)
    ========================================================================== */
-const APP={view:'dashboard',user:null,editing:null,navOpen:false};
+const APP={view:'dashboard',user:null,editing:null,navOpen:false,reqView:'cards',theme:'auto'};
 const DIR={people:[],roles:[],departments:[],modules:[],projects:[]};
+
+/* ---- Theme engine (auto / light / dark), persisted ---- */
+const Theme={
+  order:['auto','light','dark'],
+  ic:{auto:'settings',light:'star',dark:'shield'},
+  apply(){const t=APP.theme;if(t==='auto')document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme',t);
+    const b=$('#themeBtn');if(b)b.innerHTML=svg(t==='dark'?'shield':t==='light'?'star':'settings',17);
+    try{localStorage.setItem('ace_theme',t);}catch(e){}},
+  cycle(){APP.theme=this.order[(this.order.indexOf(APP.theme)+1)%3];this.apply();
+    toast('Theme: '+APP.theme,'');},
+  load(){try{APP.theme=localStorage.getItem('ace_theme')||'auto';}catch(e){}this.apply();}
+};
 
 function toast(msg,kind=''){const t=document.createElement('div');t.className='toast '+kind;t.textContent=msg;
   $('#toasts').appendChild(t);setTimeout(()=>{t.style.opacity=0;t.style.transition='.3s';setTimeout(()=>t.remove(),300);},2600);}
@@ -713,12 +824,22 @@ const TITLES={dashboard:['Dashboard','Overview of approvals and activity'],
   templates:['Templates','Start from a pre-built form template'],
   settings:['Configuration','Directory, roles, departments & modules']};
 
+const BOTNAV=['dashboard','inbox','requests','forms','settings'];
+async function renderChrome(){
+  const inbox=await inboxCount();const un=await Notify.unread();
+  const mb=$('#menuBtn');if(mb&&!mb.innerHTML)mb.innerHTML=svg('menu',18);
+  $('#searchBtn').innerHTML=svg('search',17);
+  Theme.apply();
+  $('#bell').innerHTML=svg('bell',17)+(un?`<span class="dot"></span>`:'');
+  $('#fab').innerHTML=svg('plus',26);
+  $('#botnav').innerHTML=BOTNAV.map(id=>{const n=NAV.find(x=>x.id===id);
+    const badge=id==='inbox'&&inbox?`<span class="nb">${inbox}</span>`:'';
+    return `<button data-action="go" data-view="${id}" class="${APP.view===id?'on':''}">${svg(n.ic,20)}<span>${n.label.split(' ')[0]}</span>${badge}</button>`;}).join('');
+}
 async function render(){
-  await renderNav();
+  await renderNav();await renderChrome();
   const [t,s]=TITLES[APP.view]||['',''];
   $('#viewTitle').textContent=t;$('#viewSub').textContent=s;
-  const mb=$('#menuBtn');if(mb&&!mb.innerHTML)mb.innerHTML=svg('menu',18);
-  const bell=$('#bell');const un=await Notify.unread();bell.innerHTML=svg('bell',17)+(un?`<span class="dot"></span>`:'');
   const c=$('#content');
   if(APP.view==='dashboard')return renderDashboard(c);
   if(APP.view==='inbox')return renderInbox(c);
@@ -771,16 +892,70 @@ async function renderInbox(c){
     :emptyCard('inbox','Inbox zero','No requests are waiting on your role right now. Switch user in the sidebar to test other approvers.');
 }
 
-/* ---------- Requests ---------- */
+/* ---------- Requests · DATA ENGINE (Cards/Table/Kanban/Calendar + filter/sort/saved views) ---------- */
+const REQ_STATUSES=['pending','approved','rejected','returned','revision','cancelled'];
+const DATA_VIEWS=[['cards','Cards','layout-dashboard'],['table','Table','list'],['kanban','Kanban','shapes'],['calendar','Calendar','calendar']];
 async function renderRequests(c){
   const reqs=await Store.list('requests');
   const f=APP.reqFilter||'all';
-  const list=reqs.filter(r=>f==='all'||r.status===f);
+  const mod=APP.reqModule||'all';
+  const sort=APP.reqSort||'new';
+  const view=APP.reqView||'cards';
+  let list=reqs.filter(r=>(f==='all'||r.status===f)&&(mod==='all'||r.module===mod));
+  list.sort((a,b)=> sort==='new'?b.submittedAt-a.submittedAt : sort==='old'?a.submittedAt-b.submittedAt : esc(a.formName).localeCompare(esc(b.formName)));
   const counts=k=>reqs.filter(r=>r.status===k).length;
-  c.innerHTML=`<div class="row wrap" style="margin-bottom:14px">
-    ${['all','pending','approved','rejected','returned','cancelled'].map(k=>`<button class="chip" data-action="reqFilter" data-f="${k}"
-      style="${f===k?'background:var(--brand);color:#fff;border-color:transparent':''}">${k[0].toUpperCase()+k.slice(1)} ${k==='all'?reqs.length:counts(k)}</button>`).join('')}</div>
-    ${list.length?`<div class="grid cols">${list.map(reqCard).join('')}</div>`:emptyCard('folder','No requests','Nothing matches this filter.')}`;
+  const savedViews=await Store.list('views');
+  const toolbar=`
+    <div class="viewbar">
+      <div class="segmented">${DATA_VIEWS.map(([v,l,ic])=>`<button data-action="reqView" data-v="${v}" class="${view===v?'on':''}">${svg(ic,14)}<span class="hide-sm">${l}</span></button>`).join('')}</div>
+      <span class="sp"></span>
+      <select class="inp" style="width:auto;padding:8px 30px 8px 11px" data-action="reqSortSel">
+        ${[['new','Newest'],['old','Oldest'],['name','Name A–Z']].map(([v,l])=>`<option value="${v}" ${sort===v?'selected':''}>${l}</option>`).join('')}</select>
+      <button class="btn sm" data-action="saveView">${svg('star',14)} Save view</button>
+    </div>
+    <div class="row wrap" style="margin-bottom:6px;gap:7px">
+      ${['all',...REQ_STATUSES].map(k=>`<button class="chip" data-action="reqFilter" data-f="${k}"
+        style="${f===k?'background:var(--brand);color:#fff;border-color:transparent':''}">${k[0].toUpperCase()+k.slice(1)} ${k==='all'?reqs.length:counts(k)}</button>`).join('')}
+      <select class="inp" style="width:auto;padding:6px 28px 6px 10px;font-size:12.5px" data-action="reqModuleSel">
+        <option value="all" ${mod==='all'?'selected':''}>All modules</option>
+        ${DIR.modules.map(m=>`<option value="${m.id}" ${mod===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select>
+    </div>
+    ${savedViews.length?`<div class="row wrap" style="margin-bottom:12px;gap:6px">${savedViews.map(v=>`<span class="chip" data-action="loadView" data-id="${v.id}">${svg('star',12)} ${esc(v.name)}<button data-action="delView" data-id="${v.id}" style="margin-left:4px;color:var(--muted)">${svg('x',11)}</button></span>`).join('')}</div>`:''}`;
+  let bodyHtml;
+  if(!list.length)bodyHtml=emptyCard('folder','No requests','Nothing matches this filter.');
+  else if(view==='cards')bodyHtml=`<div class="grid cols">${list.map(reqCard).join('')}</div>`;
+  else if(view==='table')bodyHtml=reqTable(list);
+  else if(view==='kanban')bodyHtml=reqKanban(list);
+  else if(view==='calendar')bodyHtml=reqCalendar(list);
+  c.innerHTML=toolbar+bodyHtml;
+}
+function reqTable(list){
+  return `<div class="tablewrap"><table class="dtable"><thead><tr>
+    <th>Request</th><th>Submitted by</th><th>Module</th><th class="hide-sm">Current step</th><th>Date</th><th>Status</th></tr></thead>
+    <tbody>${list.map(r=>{const step=r.steps[r.currentStep];
+      return `<tr data-action="openReq" data-id="${r.id}"><td><div class="row" style="gap:8px"><span style="color:${r.color||'#4f46e5'};display:inline-flex">${svg(r.icon||'file-text',16)}</span><b>${esc(r.formName)}</b></div></td>
+      <td>${esc(r.submittedByName)}</td><td>${esc(r.module||'—')}</td>
+      <td class="hide-sm">${r.status==='pending'&&step?esc(step.name):'—'}</td>
+      <td>${fmtDate(r.submittedAt)}</td><td><span class="status ${r.status}">${r.status}</span></td></tr>`;}).join('')}</tbody></table></div>`;
+}
+function reqKanban(list){
+  const cols=REQ_STATUSES.filter(s=>list.some(r=>r.status===s));
+  const use=cols.length?cols:['pending'];
+  return `<div class="kanban">${use.map(s=>{const items=list.filter(r=>r.status===s);
+    return `<div class="kcol"><div class="kh"><span class="status ${s}">${s}</span><span class="cnt">${items.length}</span></div>
+      ${items.map(reqCard).join('')||`<div class="tiny muted" style="text-align:center;padding:16px">Empty</div>`}</div>`;}).join('')}</div>`;
+}
+function reqCalendar(list){
+  const byDay={};list.forEach(r=>{const d=new Date(r.submittedAt);const k=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();(byDay[k]=byDay[k]||[]).push(r);});
+  const now=list.length?new Date(list[0].submittedAt):new Date(APP.__now||Date.now());
+  const y=now.getFullYear(),m=now.getMonth();
+  const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+  const cells=[];for(let i=0;i<first;i++)cells.push('<div></div>');
+  for(let d=1;d<=days;d++){const k=y+'-'+m+'-'+d;const items=byDay[k]||[];
+    cells.push(`<div class="cd"><div class="dn">${d}</div>${items.slice(0,3).map(r=>`<span class="dot2" data-action="openReq" data-id="${r.id}">${esc(r.formName)}</span>`).join('')}${items.length>3?`<span class="tiny muted">+${items.length-3}</span>`:''}</div>`);}
+  const dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return `<div class="card pad"><div style="font-weight:800;margin-bottom:10px">${new Date(y,m,1).toLocaleDateString('en-PH',{month:'long',year:'numeric'})}</div>
+    <div class="cal">${dow.map(d=>`<div class="head">${d}</div>`).join('')}${cells.join('')}</div></div>`;
 }
 
 /* ---------- Request detail ---------- */
@@ -872,6 +1047,19 @@ async function newForm(){
 
 /* ---------- FORM BUILDER ---------- */
 let BUILDER_SEL=null;
+/* ---- Undo/redo history for the form builder ---- */
+const History={u:[],r:[],max:60,
+  _snap(f){return JSON.stringify({fields:f.fields,workflow:f.workflow,permissions:f.permissions});},
+  snap(f){if(!f)return;this.u.push(this._snap(f));if(this.u.length>this.max)this.u.shift();this.r=[];this._buttons();},
+  reset(){this.u=[];this.r=[];this._buttons();},
+  _buttons(){const u=$('#undoBtn'),r=$('#redoBtn');if(u)u.disabled=!this.u.length;if(r)r.disabled=!this.r.length;},
+  async _apply(json){const f=await Store.get('forms',APP.editing);if(!f)return;const s=JSON.parse(json);
+    f.fields=s.fields;f.workflow=s.workflow;f.permissions=s.permissions;await Store.upsert('forms',f);render();},
+  async undo(){if(!this.u.length){toast('Nothing to undo','');return;}const f=await Store.get('forms',APP.editing);
+    this.r.push(this._snap(f));await this._apply(this.u.pop());toast('Undo','');},
+  async redo(){if(!this.r.length){toast('Nothing to redo','');return;}const f=await Store.get('forms',APP.editing);
+    this.u.push(this._snap(f));await this._apply(this.r.pop());toast('Redo','');}
+};
 async function renderBuilder(c){
   const f=await Store.get('forms',APP.editing);if(!f){APP.editing=null;return render();}
   const tab=APP.builderTab||'fields';
@@ -882,7 +1070,10 @@ async function renderBuilder(c){
       <button class="${tab==='fields'?'on':''}" data-action="btab" data-t="fields">${svg('shapes',15)} Fields</button>
       <button class="${tab==='workflow'?'on':''}" data-action="btab" data-t="workflow">${svg('workflow',15)} Workflow</button>
       <button class="${tab==='settings'?'on':''}" data-action="btab" data-t="settings">${svg('settings',15)} Settings</button>
+      <button class="${tab==='rules'?'on':''}" data-action="btab" data-t="rules">${svg('workflow',15)} Rules</button>
     </div>
+    ${tab==='fields'?`<button class="iconbtn" id="undoBtn" data-action="undo" title="Undo (Ctrl+Z)">${svg('corner-up-left',16)}</button>
+      <button class="iconbtn" id="redoBtn" data-action="redo" title="Redo (Ctrl+Y)">${svg('forward',16)}</button>`:''}
     <span class="sp"></span>
     <span class="status ${f.status}">${f.status}</span>
     ${f.status==='published'?`<button class="btn" data-action="setStatus" data-s="draft">${svg('archive',15)} Unpublish</button>`
@@ -890,9 +1081,29 @@ async function renderBuilder(c){
     ${f.status==='published'?`<button class="btn ok" data-action="useForm" data-id="${f.id}">${svg('eye',15)} Preview / Submit</button>`:''}
   </div>
   <div id="builderBody"></div>`;
-  if(tab==='fields')renderBuilderFields(f);
+  if(tab==='fields'){renderBuilderFields(f);History._buttons();}
   else if(tab==='workflow')renderBuilderWorkflow(f);
+  else if(tab==='rules')renderBuilderRules(f);
   else renderBuilderSettings(f);
+}
+
+/* ---------- AUTOMATION ENGINE (no-code rules per form) ---------- */
+const AUTO_TRIGGERS=[['submit','When submitted'],['approve','When a step is approved'],['final','When fully approved'],['reject','When rejected']];
+const AUTO_ACTIONS=[['notify','Notify a role'],['comment','Add a system comment'],['archive','Archive the form after N approvals'],['tag','Set a status tag']];
+function renderBuilderRules(f){
+  f.automations=f.automations||[];
+  const roleOpts=DIR.roles.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');
+  $('#builderBody').innerHTML=`<div style="max-width:720px">
+    <div class="card pad" style="margin-bottom:12px"><div class="small muted">No-code automations. Each rule runs on a workflow event. Example: <b>When fully approved → Notify Finance</b>, or <b>When submitted → Add a system comment</b>. More actions (webhook, generate PO, e-mail) plug in through the same engine later.</div></div>
+    ${f.automations.map((a,i)=>`<div class="card pad" style="margin-bottom:10px"><div class="row" style="margin-bottom:8px"><b class="small">Rule ${i+1}</b><span class="sp"></span><button class="btn sm ghost" data-action="delAuto" data-i="${i}">${svg('trash-2',14)}</button></div>
+      <div class="f2">
+        <div class="field" style="margin:0"><label>Trigger</label><select class="inp" data-auto="${i}" data-ap="on">${AUTO_TRIGGERS.map(([v,l])=>`<option value="${v}" ${a.on===v?'selected':''}>${l}</option>`).join('')}</select></div>
+        <div class="field" style="margin:0"><label>Action</label><select class="inp" data-auto="${i}" data-ap="do">${AUTO_ACTIONS.map(([v,l])=>`<option value="${v}" ${a.do===v?'selected':''}>${l}</option>`).join('')}</select></div>
+        ${a.do==='notify'?`<div class="field" style="margin:0"><label>Notify role</label><select class="inp" data-auto="${i}" data-ap="role">${roleOpts.replace(`value="${a.role}"`,`value="${a.role}" selected`)}</select></div>`:''}
+        ${a.do==='comment'||a.do==='tag'?`<div class="field" style="margin:0"><label>${a.do==='tag'?'Tag':'Text'}</label><input class="inp" data-auto="${i}" data-ap="text" value="${esc(a.text||'')}"></div>`:''}
+      </div></div>`).join('')||'<div class="empty">No automation rules yet.</div>'}
+    <button class="btn primary" data-action="addAuto">${svg('plus',15)} Add rule</button>
+  </div>`;
 }
 
 function renderBuilderFields(f){
@@ -945,12 +1156,29 @@ function inspector(fl,f){const d=FieldTypes[fl.type];
     ${isLayout?'':`
     <div class="field"><label>Field key <span class="muted tiny">(for formulas & conditions)</span></label>
       <input class="inp mono" data-prop="key" value="${esc(fl.key||'')}" placeholder="${fieldKey(fl)}"></div>
-    <div class="field"><label>Help text</label><input class="inp" data-prop="help" value="${esc(fl.help||'')}"></div>
+    <div class="field"><label>Help / description</label><input class="inp" data-prop="help" value="${esc(fl.help||'')}"></div>
+    ${['divider','heading','description'].includes(fl.type)?'':`
+    <div class="f2">
+      <div class="field" style="margin:0"><label>Placeholder</label><input class="inp" data-prop="placeholder" value="${esc(fl.placeholder||'')}"></div>
+      <div class="field" style="margin:0"><label>Default value</label><input class="inp" data-prop="defaultValue" value="${esc(fl.defaultValue||'')}"></div>
+      <div class="field" style="margin:0"><label>Prefix</label><input class="inp" data-prop="prefix" value="${esc(fl.prefix||'')}" placeholder="e.g. ₱"></div>
+      <div class="field" style="margin:0"><label>Suffix</label><input class="inp" data-prop="suffix" value="${esc(fl.suffix||'')}" placeholder="e.g. kg"></div>
+    </div>`}
     ${extra}
-    <div class="f2"><label class="checkline"><input type="checkbox" data-prop="required" ${fl.required?'checked':''}> Required</label>
-      <div class="field" style="margin:0"><label>Width</label><select class="inp" data-prop="width">
-        <option value="full" ${fl.width==='full'?'selected':''}>Full</option>
-        <option value="half" ${fl.width==='half'?'selected':''}>Half</option></select></div></div>`}
+    <div class="f2">
+      <label class="checkline"><input type="checkbox" data-prop="required" ${fl.required?'checked':''}> Required</label>
+      <label class="checkline"><input type="checkbox" data-prop="readonly" ${fl.readonly?'checked':''}> Read only</label>
+    </div>
+    <div class="field"><label>Width / column span</label><select class="inp" data-prop="width">
+        <option value="full" ${fl.width==='full'?'selected':''}>Full width</option>
+        <option value="half" ${fl.width==='half'?'selected':''}>Half (2 columns)</option></select></div>
+    <div class="wf-cond"><div class="row"><b class="small">Conditional visibility</b><span class="sp"></span>
+      <label class="checkline" style="margin:0;padding:5px 9px"><input type="checkbox" data-action="toggleVis" data-fid="${fl.id}" ${fl.visibleIf?'checked':''}> show only if…</label></div>
+      ${fl.visibleIf?`<div class="f2" style="margin-top:8px">
+        <select class="inp" data-visif="field">${[['','— field —'],...f.fields.filter(x=>x.id!==fl.id&&!FieldTypes[x.type]?.layout).map(x=>[fieldKey(x),x.label])].map(([v,l])=>`<option value="${v}" ${fl.visibleIf.field===v?'selected':''}>${esc(l)}</option>`).join('')}</select>
+        <select class="inp" data-visif="op">${WorkflowEngine.condOps.map(([v,l])=>`<option value="${v}" ${fl.visibleIf.op===v?'selected':''}>${l}</option>`).join('')}</select>
+        <input class="inp full" data-visif="value" value="${esc(fl.visibleIf.value||'')}" placeholder="value"></div>`:''}
+    </div>`}
   </div>`;
 }
 
@@ -1064,10 +1292,15 @@ let SUBMIT_STATE=null;
 async function useForm(id){
   const f=await Store.get('forms',id);if(!f)return;
   if(!Permission.can(f,'submit'))return toast('Your role cannot submit this form','bad');
-  const values={};(f.fields||[]).forEach(fl=>{if(!FieldTypes[fl.type]?.layout)values[fieldKey(fl)]=clone(FieldTypes[fl.type].value);});
+  const values={};(f.fields||[]).forEach(fl=>{if(!FieldTypes[fl.type]?.layout)
+    values[fieldKey(fl)]=(fl.defaultValue!=null&&fl.defaultValue!=='')?fl.defaultValue:clone(FieldTypes[fl.type].value);});
   SUBMIT_STATE={form:f,values,errors:{}};
   await drawSubmitModal();
 }
+/* conditional visibility: is a field currently shown given the form values? */
+function fieldVisible(fl,values,form){return fl.visibleIf&&fl.visibleIf.field?WorkflowEngine.test(fl.visibleIf,values,form):true;}
+function applyVisibility(){const S=SUBMIT_STATE;if(!S)return;
+  S.form.fields.forEach(fl=>{const w=document.querySelector(`[data-fieldwrap="${fl.id}"]`);if(w)w.style.display=fieldVisible(fl,S.values,S.form)?'':'none';});}
 async function drawSubmitModal(){
   const {form,values,errors}=SUBMIT_STATE;
   const fieldsHtml=[];
@@ -1086,12 +1319,14 @@ async function drawSubmitModal(){
 async function renderSubmitField(fl,values,errors){
   const d=FieldTypes[fl.type];const key=fieldKey(fl);const err=errors[fl.id];
   const wide=fl.width!=='half';
+  const hidden=!fieldVisible(fl,values,SUBMIT_STATE?SUBMIT_STATE.form:{fields:[]});
+  const wrap=`data-fieldwrap="${fl.id}" style="${hidden?'display:none;':''}${wide?'grid-column:1/-1':''}"`;
   if(d.layout){const inner=fl.type==='divider'?'<hr style="border:0;border-top:1px solid var(--stroke);margin:6px 0">'
     :fl.type==='heading'?`<h3 style="margin:10px 0 2px;font-size:16px">${esc(fl.label)}</h3>`
     :`<div class="small muted" style="margin-bottom:8px">${esc(fl.label)}</div>`;
-    return `<div class="full">${inner}</div>`;}
+    return `<div ${wrap}>${inner}</div>`;}
   const input=await previewInput(fl,values[key],false);
-  return `<div class="field ${wide?'full':'half'}"><label>${esc(fl.label)}${fl.required?' <span class="req">*</span>':''}</label>
+  return `<div class="field ${wide?'full':'half'}" ${wrap}><label>${esc(fl.label)}${fl.required?' <span class="req">*</span>':''}</label>
     ${fl.help?`<div class="help">${esc(fl.help)}</div>`:''}${input}
     ${err?`<div class="errmsg" data-err="${fl.id}">${err}</div>`:''}</div>`;
 }
@@ -1100,13 +1335,17 @@ async function renderSubmitField(fl,values,errors){
 function previewInput(fl,val,preview){
   const d=FieldTypes[fl.type];const key=fieldKey(fl);
   const bind=preview?'':`data-bind="${key}" data-ftype="${fl.type}" data-fid="${fl.id}"`;
-  const dis=preview?'disabled':'';
+  const dis=preview?'disabled':(fl.readonly?'readonly':'');
+  const ph=esc(fl.placeholder||fl.help||'');
+  const pfx=fl.prefix?`<span style="position:absolute;left:11px;font-weight:700;color:var(--muted)">${esc(fl.prefix)}</span>`:'';
+  const sfx=fl.suffix?`<span style="position:absolute;right:11px;font-weight:600;color:var(--muted)">${esc(fl.suffix)}</span>`:'';
+  const afx=(inp)=>(fl.prefix||fl.suffix)?`<div class="row" style="position:relative">${pfx}${inp.replace('class="inp"',`class="inp" style="${fl.prefix?'padding-left:'+(11+fl.prefix.length*9)+'px;':''}${fl.suffix?'padding-right:'+(11+fl.suffix.length*9)+'px;':''}"`)}${sfx}</div>`:inp;
   switch(fl.type){
     case'text':case'email':case'phone':
-      return `<input class="inp" type="${fl.type==='email'?'email':'text'}" ${bind} ${dis} value="${esc(val||'')}" placeholder="${esc(fl.help||'')}">`;
-    case'number':return `<input class="inp" type="number" ${bind} ${dis} value="${esc(val||'')}">`;
-    case'currency':return `<div class="row" style="position:relative"><span style="position:absolute;left:11px;font-weight:700;color:var(--muted)">₱</span><input class="inp" style="padding-left:26px" type="number" ${bind} ${dis} value="${esc(val||'')}"></div>`;
-    case'paragraph':return `<textarea class="inp" ${bind} ${dis}>${esc(val||'')}</textarea>`;
+      return afx(`<input class="inp" type="${fl.type==='email'?'email':'text'}" ${bind} ${dis} value="${esc(val||'')}" placeholder="${ph}">`);
+    case'number':return afx(`<input class="inp" type="number" ${bind} ${dis} value="${esc(val||'')}" placeholder="${ph}">`);
+    case'currency':return `<div class="row" style="position:relative"><span style="position:absolute;left:11px;font-weight:700;color:var(--muted)">${esc(fl.prefix||'₱')}</span><input class="inp" style="padding-left:26px" type="number" ${bind} ${dis} value="${esc(val||'')}" placeholder="${ph}"></div>`;
+    case'paragraph':return `<textarea class="inp" ${bind} ${dis} placeholder="${ph}">${esc(val||'')}</textarea>`;
     case'date':return `<input class="inp" type="date" ${bind} ${dis} value="${esc(val||'')}">`;
     case'time':return `<input class="inp" type="time" ${bind} ${dis} value="${esc(val||'')}">`;
     case'dropdown':case'lookup':case'people':case'project':case'department':case'role':{
@@ -1152,10 +1391,11 @@ function wireSubmitInputs(){
   root.addEventListener('change',onSubmitInput);
   // signature pads
   $$('canvas[data-sig]',root).forEach(setupSignature);
+  applyVisibility();
 }
 function onSubmitInput(e){
   const t=e.target;const S=SUBMIT_STATE;if(!S)return;
-  if(t.dataset.bind!=null){let v=t.type==='checkbox'?t.checked:t.value;S.values[t.dataset.bind]=v;recalc();}
+  if(t.dataset.bind!=null){let v=t.type==='checkbox'?t.checked:t.value;S.values[t.dataset.bind]=v;recalc();applyVisibility();}
   else if(t.dataset.multi!=null){const key=t.dataset.multi;const arr=Array.isArray(S.values[key])?S.values[key]:[];
     const val=t.dataset.v;if(t.checked){if(!arr.includes(val))arr.push(val);}else{const i=arr.indexOf(val);if(i>=0)arr.splice(i,1);}S.values[key]=arr;}
   else if(t.dataset.rrow!=null){const wrap=t.closest('[data-repeat]');const key=wrap.dataset.repeat;
@@ -1199,11 +1439,17 @@ function makeSortable(list,onReorder){
 /* ============================================================================
    10 · ACTION ROUTER  (event delegation)
    ========================================================================== */
+const SNAP_ACTIONS=new Set(['addField','delField','dupField','addOpt','delOpt','addCol','delCol','addStep','delStep','moveStep','toggleCond','addAuto','delAuto']);
 document.addEventListener('click',async e=>{
   const el=e.target.closest('[data-action]');if(!el)return;
   const a=el.dataset.action, id=el.dataset.id;
   const F=async()=>APP.editing?await Store.get('forms',APP.editing):null;
+  if(APP.editing&&SNAP_ACTIONS.has(a)){const cf=await Store.get('forms',APP.editing);if(cf)History.snap(cf);}
   switch(a){
+    case'undo':await History.undo();break;
+    case'redo':await History.redo();break;
+    case'addAuto':{const f=await F();f.automations=f.automations||[];f.automations.push({on:'final',do:'notify',role:DIR.roles[0].id,text:''});await Store.upsert('forms',f);renderBuilderRules(f);break;}
+    case'delAuto':{const f=await F();f.automations.splice(+el.dataset.i,1);await Store.upsert('forms',f);renderBuilderRules(f);break;}
     case'go':APP.view=el.dataset.view;APP.editing=null;APP.navOpen=false;$('#side').classList.remove('open');$('#scrim').classList.remove('open');render();break;
     case'openNav':$('#side').classList.add('open');$('#scrim').classList.add('open');break;
     case'closeNav':$('#side').classList.remove('open');$('#scrim').classList.remove('open');break;
@@ -1211,10 +1457,21 @@ document.addEventListener('click',async e=>{
     case'closeModal':closeModal();break;
     case'closeModalBg':if(e.target.classList.contains('overlay'))closeModal();break;
     case'notifs':await showNotifs();break;
+    case'cycleTheme':Theme.cycle();break;
+    case'search':openSearch();break;
+    case'fab':await fabAction();break;
+
+    case'searchGoForm':closeModal();APP.view='forms';APP.editing=id;APP.builderTab='fields';BUILDER_SEL=null;History.reset();render();break;
+
+    /* data-engine views */
+    case'reqView':APP.reqView=el.dataset.v;render();break;
+    case'saveView':await saveCurrentView();break;
+    case'loadView':{const v=await Store.get('views',id);if(v){Object.assign(APP,v.state);render();}break;}
+    case'delView':{e.stopPropagation();await Store.remove('views',id);render();break;}
 
     /* forms */
     case'newForm':await newForm();break;
-    case'editForm':APP.editing=id;APP.builderTab='fields';BUILDER_SEL=null;render();break;
+    case'editForm':APP.editing=id;APP.builderTab='fields';BUILDER_SEL=null;History.reset();render();break;
     case'closeBuilder':APP.editing=null;render();break;
     case'btab':APP.builderTab=el.dataset.t;render();break;
     case'useForm':await useForm(id);break;
@@ -1246,9 +1503,10 @@ document.addEventListener('click',async e=>{
     case'moveStep':{const f=await F();const arr=f.workflow.steps;const i=arr.findIndex(s=>s.id===id);const j=i+(+el.dataset.dir);
       if(j>=0&&j<arr.length){[arr[i],arr[j]]=[arr[j],arr[i]];await Store.upsert('forms',f);renderBuilderWorkflow(f);}break;}
     case'toggleCond':{const f=await F();const s=f.workflow.steps.find(x=>x.id===id);s.condition=s.condition?null:{field:'',op:'gt',value:''};await Store.upsert('forms',f);renderBuilderWorkflow(f);break;}
+    case'toggleVis':{const f=await F();const fl=f.fields.find(x=>x.id===el.dataset.fid);fl.visibleIf=fl.visibleIf?null:{field:'',op:'eq',value:''};await Store.upsert('forms',f);renderBuilderFields(f);break;}
 
     /* templates */
-    case'useTemplate':{const t=await Store.get('forms',id);const c=clone(t);c.id=uid('form');c.isTemplate=false;c.status='draft';c.name=t.name;delete c.createdAt;await Store.upsert('forms',c);APP.view='forms';APP.editing=c.id;APP.builderTab='fields';toast('Template copied to Form Builder','ok');render();break;}
+    case'useTemplate':{const t=await Store.get('forms',id);const c=clone(t);c.id=uid('form');c.isTemplate=false;c.status='draft';c.name=t.name;delete c.createdAt;await Store.upsert('forms',c);APP.view='forms';APP.editing=c.id;APP.builderTab='fields';History.reset();toast('Template copied to Form Builder','ok');render();break;}
     case'dupTemplatePreview':{const t=await Store.get('forms',id);SUBMIT_STATE={form:t,values:{},errors:{}};await drawSubmitModal();break;}
 
     /* submit */
@@ -1283,6 +1541,8 @@ document.addEventListener('input',onGlobalInput);
 async function onGlobalInput(e){
   const t=e.target;
   if(t.dataset&&t.dataset.action==='switchUser'){APP.user=DIR.people.find(p=>p.id===t.value);render();return;}
+  if(t.dataset&&t.dataset.action==='reqSortSel'){APP.reqSort=t.value;render();return;}
+  if(t.dataset&&t.dataset.action==='reqModuleSel'){APP.reqModule=t.value;render();return;}
   if(!APP.editing)return;
   const f=await Store.get('forms',APP.editing);if(!f)return;
   // field property
@@ -1295,6 +1555,11 @@ async function onGlobalInput(e){
     else{setPath(f,t.dataset.prop,v);await Store.upsert('forms',f);
       if(t.dataset.prop==='name'){/*don't rerender to keep focus*/}}
     return;}
+  // conditional visibility props
+  if(t.dataset.visif!=null&&BUILDER_SEL){const fl=f.fields.find(x=>x.id===BUILDER_SEL);if(fl){fl.visibleIf=fl.visibleIf||{field:'',op:'eq',value:''};fl.visibleIf[t.dataset.visif]=t.value;await Store.upsert('forms',f);}return;}
+  // automation rule props
+  if(t.dataset.auto!=null){const i=+t.dataset.auto;f.automations=f.automations||[];const rule=f.automations[i];if(!rule)return;
+    rule[t.dataset.ap]=t.value;await Store.upsert('forms',f);if(t.dataset.ap==='do')renderBuilderRules(f);return;}
   // option label edit
   if(t.dataset.opt!=null&&BUILDER_SEL){const fl=f.fields.find(x=>x.id===BUILDER_SEL);const i=+t.dataset.opt;fl.options[i]={label:t.value,value:t.value};await Store.upsert('forms',f);return;}
   if(t.dataset.col!=null&&BUILDER_SEL){const fl=f.fields.find(x=>x.id===BUILDER_SEL);const i=+t.dataset.col;fl.columns[i].label=t.value;fl.columns[i].key=t.value.toLowerCase().replace(/\s+/g,'_')||('c'+i);await Store.upsert('forms',f);return;}
@@ -1361,6 +1626,50 @@ async function showNotifs(){
     ${n.requestId?`<button class="btn sm" data-action="openReq" data-id="${n.requestId}" style="margin-top:6px">Open request</button>`:''}</div>`).join('')}</div>`
     :emptyCard('bell-off','No notifications','You are all caught up.')});
   render();
+}
+
+/* ---------- Global search (Ctrl/⌘+K) ---------- */
+async function openSearch(){
+  modal({title:'Search',body:`<input class="inp" id="searchIn" placeholder="Search forms, requests, people…" autocomplete="off">
+    <div id="searchRes" style="margin-top:12px"><div class="muted small">Type to search across forms, requests, people and modules.</div></div>`});
+  const inp=$('#searchIn');inp.focus();
+  const run=async()=>{
+    const q=inp.value.trim().toLowerCase();const box=$('#searchRes');
+    if(!q){box.innerHTML='<div class="muted small">Type to search…</div>';return;}
+    const forms=(await Store.list('forms')).filter(f=>!f.isTemplate);
+    const reqs=await Store.list('requests');
+    const hitF=forms.filter(f=>(f.name+f.description+f.module).toLowerCase().includes(q)).slice(0,6);
+    const hitR=reqs.filter(r=>(r.formName+r.submittedByName+r.module+JSON.stringify(r.values)).toLowerCase().includes(q)).slice(0,8);
+    const hitP=DIR.people.filter(p=>(p.name+p.role+p.department).toLowerCase().includes(q)).slice(0,5);
+    const sec=(t,items)=>items.length?`<div class="sectitle" style="margin:12px 4px 6px">${t}</div>${items.join('')}`:'';
+    box.innerHTML=(sec('Forms',hitF.map(f=>`<button class="btn block" style="justify-content:flex-start;margin-bottom:6px" data-action="searchGoForm" data-id="${f.id}">${svg(f.icon,15)} ${esc(f.name)}</button>`))
+      +sec('Requests',hitR.map(r=>`<button class="btn block" style="justify-content:flex-start;margin-bottom:6px" data-action="openReq" data-id="${r.id}">${svg(r.icon||'file-text',15)} ${esc(r.formName)} <span class="status ${r.status}" style="margin-left:auto">${r.status}</span></button>`))
+      +sec('People',hitP.map(p=>`<div class="chip" style="margin:0 6px 6px 0">${svg('user',13)} ${esc(p.name)} · ${esc(p.role)}</div>`)))
+      ||'<div class="muted small">No matches.</div>';
+  };
+  inp.addEventListener('input',run);
+}
+
+/* ---------- FAB (context-aware create) ---------- */
+async function fabAction(){
+  if(APP.view==='forms'){await newForm();return;}
+  if(APP.view==='templates'){toast('Pick a template below','');return;}
+  // otherwise: quick-start a request from any published form
+  const forms=(await Store.list('forms')).filter(f=>f.status==='published'&&!f.isTemplate);
+  const tpls=(await Store.list('forms')).filter(f=>f.isTemplate);
+  const pool=forms.length?forms:tpls;
+  if(!pool.length){toast('No published forms yet — build one first','warn');APP.view='forms';render();return;}
+  modal({title:'New request',body:`<div class="muted small" style="margin-bottom:10px">Choose a form to submit.</div>
+    <div class="grid" style="grid-template-columns:1fr">${pool.slice(0,12).map(f=>`<button class="btn block" style="justify-content:flex-start;margin-bottom:8px" data-action="${f.isTemplate?'useTemplate':'useForm'}" data-id="${f.id}">${svg(f.icon,16)} ${esc(f.name)}</button>`).join('')}</div>`});
+}
+
+/* ---------- Saved views (Data Engine) ---------- */
+async function saveCurrentView(){
+  const name=prompt('Name this view (filters, sort & layout will be saved):','My view');
+  if(!name)return;
+  await Store.upsert('views',{id:uid('view'),name,owner:APP.user.id,
+    state:{reqView:APP.reqView,reqFilter:APP.reqFilter,reqModule:APP.reqModule,reqSort:APP.reqSort}});
+  toast('View saved','ok');render();
 }
 
 /* ============================================================================
@@ -1432,7 +1741,27 @@ async function seedIfEmpty(){
     for(const t of templates)await Store.upsert('forms',t);
   }
 }
+/* keyboard shortcuts: ⌘/Ctrl+K search · Esc close · ⌘/Ctrl+Z/Y undo/redo in builder */
+document.addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if((e.metaKey||e.ctrlKey)&&k==='k'){e.preventDefault();openSearch();return;}
+  if(e.key==='Escape'&&$('#modalRoot').innerHTML){closeModal();return;}
+  if((e.metaKey||e.ctrlKey)&&APP.editing&&APP.builderTab==='fields'){
+    if(k==='z'){e.preventDefault();History.undo();}
+    else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();History.redo();}
+  }
+});
+/* pull-to-refresh (mobile) */
+(function(){let sy=0,pulling=false;const pull=()=>$('#pull');
+  window.addEventListener('touchstart',e=>{if(window.scrollY<=0&&innerWidth<=820){sy=e.touches[0].clientY;pulling=true;}},{passive:true});
+  window.addEventListener('touchmove',e=>{if(!pulling)return;const dy=e.touches[0].clientY-sy;
+    if(dy>0&&window.scrollY<=0){const h=Math.min(dy*.4,60);pull().style.height=h+'px';pull().textContent=h>48?'Release to refresh':'Pull to refresh';}},{passive:true});
+  window.addEventListener('touchend',()=>{if(!pulling)return;pulling=false;const h=parseFloat(pull().style.height)||0;
+    pull().style.height='0px';if(h>48){render();toast('Refreshed','');}});
+})();
+
 async function boot(){
+  Theme.load();
   await seedIfEmpty();
   await loadDir();
   APP.user=DIR.people[0];
