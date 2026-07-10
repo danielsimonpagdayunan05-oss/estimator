@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Approval Center — AU One ERP</title>
+<style>
+/* ============================================================================
+   AU ONE ERP · APPROVAL CENTER
+   A single-file, dependency-free, configuration-driven approval workflow engine.
+   Layers (all in one file, cleanly separated in <script>):
+     Storage · Config · Forms · Workflow · Approval · Validation · Permission
+     · Notification · UI. Storage is async so swapping localStorage -> Supabase
+     is a body-only change (see Store.adapter).
+   ========================================================================== */
+:root{
+  --bg:#eef1f6; --bg2:#e6eaf2;
+  --glass:rgba(255,255,255,.72); --glass2:rgba(255,255,255,.55);
+  --stroke:rgba(17,24,39,.10); --stroke2:rgba(17,24,39,.06);
+  --ink:#0f172a; --ink2:#334155; --muted:#64748b; --muted2:#94a3b8;
+  --brand:#4f46e5; --brand2:#6366f1; --brandS:#eef2ff;
+  --ok:#059669; --okS:#ecfdf5; --warn:#d97706; --warnS:#fffbeb;
+  --bad:#dc2626; --badS:#fef2f2; --info:#0284c7; --infoS:#eff6ff;
+  --shadow:0 8px 30px rgba(15,23,42,.10); --shadow2:0 2px 10px rgba(15,23,42,.08);
+  --r:16px; --r2:12px; --r3:9px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b1120; --bg2:#0f172a;
+    --glass:rgba(23,32,52,.72); --glass2:rgba(23,32,52,.5);
+    --stroke:rgba(255,255,255,.10); --stroke2:rgba(255,255,255,.06);
+    --ink:#f1f5f9; --ink2:#cbd5e1; --muted:#94a3b8; --muted2:#64748b;
+    --brandS:#1e1b4b; --okS:#052e2b; --warnS:#2e2306; --badS:#3a0d0d; --infoS:#0b2540;
+    --shadow:0 8px 30px rgba(0,0,0,.45); --shadow2:0 2px 10px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);background:
+    radial-gradient(1200px 600px at 100% -10%,rgba(99,102,241,.18),transparent 60%),
+    radial-gradient(900px 500px at -10% 110%,rgba(14,165,233,.14),transparent 55%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+  background-attachment:fixed;font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--brand);text-decoration:none}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:9px;border:2px solid transparent;background-clip:content-box}
+
+/* ---- shell ---- */
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100dvh}
+.side{position:sticky;top:0;height:100dvh;padding:16px 12px;display:flex;flex-direction:column;gap:6px;
+  background:var(--glass);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-right:1px solid var(--stroke)}
+.logo{display:flex;align-items:center;gap:10px;padding:8px 8px 14px}
+.logo .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+  color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;box-shadow:var(--shadow2)}
+.logo h1{font-size:15px;margin:0;font-weight:800;letter-spacing:-.02em}
+.logo small{display:block;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.nav button{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r3);color:var(--ink2);
+  font-weight:600;font-size:14px;text-align:left;width:100%;transition:.15s}
+.nav button .ic{width:20px;text-align:center;font-size:16px;opacity:.9}
+.nav button:hover{background:var(--glass2)}
+.nav button.on{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:var(--shadow2)}
+.nav button .badge{margin-left:auto;background:var(--bad);color:#fff;font-size:11px;font-weight:800;
+  min-width:19px;height:19px;border-radius:10px;display:grid;place-items:center;padding:0 5px}
+.nav button.on .badge{background:rgba(255,255,255,.28)}
+.side .who{margin-top:auto;padding:10px;border-radius:var(--r2);background:var(--glass2);border:1px solid var(--stroke2)}
+.side .who label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.side .who select{width:100%;margin-top:6px;padding:9px 10px;border-radius:9px;border:1px solid var(--stroke);
+  background:var(--glass);font-weight:600;font-size:13px;appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12'><path d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.6' fill='none'/></svg>");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:26px}
+.side .who .role{font-size:11px;color:var(--muted);margin-top:6px;font-weight:600}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 20px;
+  background:var(--glass);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-bottom:1px solid var(--stroke)}
+.topbar h2{margin:0;font-size:19px;font-weight:800;letter-spacing:-.02em}
+.topbar .sub{color:var(--muted);font-size:12.5px;font-weight:600;margin-top:1px}
+.topbar .sp{flex:1}
+.bell{position:relative;width:40px;height:40px;border-radius:11px;background:var(--glass2);border:1px solid var(--stroke);
+  display:grid;place-items:center;font-size:17px}
+.bell .dot{position:absolute;top:7px;right:8px;width:9px;height:9px;border-radius:9px;background:var(--bad);border:2px solid var(--glass)}
+.content{padding:20px;max-width:1180px;width:100%;margin:0 auto}
+.menu-btn{display:none}
+.scrim{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.35);display:none}
+.scrim.open{display:block}
+
+/* ---- primitives ---- */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:11px;font-weight:700;font-size:13.5px;
+  background:var(--glass);border:1px solid var(--stroke);color:var(--ink);transition:.15s;box-shadow:var(--shadow2)}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+.btn.ok{background:var(--ok);color:#fff;border-color:transparent}
+.btn.bad{background:var(--bad);color:#fff;border-color:transparent}
+.btn.ghost{background:transparent;box-shadow:none}
+.btn.sm{padding:7px 11px;font-size:12.5px;border-radius:9px}
+.btn.block{width:100%;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;
+  background:var(--glass2);border:1px solid var(--stroke2);color:var(--ink2)}
+.status{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.status.draft{background:var(--glass2);color:var(--muted)}
+.status.published,.status.approved,.status.completed{background:var(--okS);color:var(--ok)}
+.status.archived{background:var(--glass2);color:var(--muted2)}
+.status.pending,.status.inprogress{background:var(--warnS);color:var(--warn)}
+.status.rejected,.status.cancelled{background:var(--badS);color:var(--bad)}
+.status.returned,.status.revision{background:var(--infoS);color:var(--info)}
+.card{background:var(--glass);border:1px solid var(--stroke);border-radius:var(--r);box-shadow:var(--shadow);
+  backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3)}
+.pad{padding:18px}
+.grid{display:grid;gap:14px}
+.cols{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.row{display:flex;align-items:center;gap:10px}
+.wrap{flex-wrap:wrap}
+.sp{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.tiny{font-size:11px}
+.sectitle{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:22px 4px 10px}
+.empty{text-align:center;color:var(--muted);padding:40px 20px;font-weight:600}
+.empty .big{font-size:34px;margin-bottom:8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{padding:15px 16px;border-radius:var(--r2)}
+.kpi .n{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.kpi .l{font-size:12px;color:var(--muted);font-weight:700;margin-top:6px;text-transform:uppercase;letter-spacing:.05em}
+
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px}
+.field>label{font-size:12px;font-weight:700;color:var(--ink2)}
+.field .req{color:var(--bad)}
+.field .help{font-size:11.5px;color:var(--muted);font-weight:500}
+.inp{width:100%;padding:11px 12px;border-radius:11px;border:1px solid var(--stroke);background:var(--glass);
+  font-size:14.5px;transition:.15s;font-weight:500}
+.inp:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(79,70,229,.16)}
+select.inp{appearance:none;padding-right:30px;font-weight:600;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12'><path d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.6' fill='none'/></svg>");
+  background-repeat:no-repeat;background-position:right 11px center}
+textarea.inp{min-height:84px;resize:vertical;font-family:inherit}
+.inp.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(220,38,38,.14)}
+.errmsg{color:var(--bad);font-size:11.5px;font-weight:600}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.half{grid-column:span 1}.full{grid-column:1/-1}
+.toggle{display:inline-flex;background:var(--glass2);border:1px solid var(--stroke);border-radius:11px;padding:3px}
+.toggle button{padding:8px 13px;border-radius:8px;font-weight:700;font-size:13px;color:var(--muted)}
+.toggle button.on{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+.opt-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.checkline{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--stroke);border-radius:10px;
+  background:var(--glass);margin-bottom:7px;font-weight:600;cursor:pointer}
+.checkline input{width:18px;height:18px;accent-color:var(--brand)}
+.stars{display:flex;gap:4px;font-size:26px;color:var(--muted2)}
+.stars .on{color:#f59e0b}
+.sig{border:1px dashed var(--stroke);border-radius:12px;background:var(--glass);touch-action:none;width:100%;height:150px;display:block}
+
+/* ---- form card grid ---- */
+.formcard{cursor:pointer;transition:.18s;overflow:hidden;position:relative}
+.formcard:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(15,23,42,.16)}
+.formcard .bar{height:6px}
+.formcard .body{padding:16px}
+.formcard .icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:#fff;box-shadow:var(--shadow2)}
+.formcard h3{margin:12px 0 4px;font-size:16px;font-weight:800;letter-spacing:-.01em}
+.formcard .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+/* ---- builder ---- */
+.builder{display:grid;grid-template-columns:230px 1fr 300px;gap:16px;align-items:start}
+.palette{position:sticky;top:78px}
+.pal-cat{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin:12px 4px 7px}
+.pal-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;border:1px solid var(--stroke);
+  background:var(--glass);margin-bottom:6px;font-weight:600;font-size:12.5px;transition:.12s;user-select:none}
+.pal-item:hover{border-color:var(--brand);transform:translateX(2px)}
+.pal-item .ic{font-size:15px;width:20px;text-align:center}
+.canvas{min-height:320px;border-radius:var(--r);border:1.5px dashed var(--stroke);padding:14px;background:var(--glass2)}
+.canvas.drop{border-color:var(--brand);background:var(--brandS)}
+.fitem{background:var(--glass);border:1px solid var(--stroke);border-radius:12px;padding:12px 12px 12px 40px;
+  margin-bottom:10px;position:relative;box-shadow:var(--shadow2)}
+.fitem.sel{border-color:var(--brand);box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+.fitem.layout{background:var(--glass2);border-style:dashed}
+.fitem .handle{position:absolute;left:8px;top:0;bottom:0;width:26px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;color:var(--muted2);cursor:grab;font-size:15px;touch-action:none}
+.fitem.dragging{opacity:.5}
+.fitem .fh{display:flex;align-items:center;gap:8px}
+.fitem .fh .t{font-weight:700;font-size:13.5px}
+.fitem .fh .ty{font-size:10.5px;color:var(--muted);font-weight:700;background:var(--glass2);padding:2px 7px;border-radius:6px}
+.fitem .acts{margin-left:auto;display:flex;gap:4px}
+.fitem .acts button{width:28px;height:28px;border-radius:8px;background:var(--glass2);border:1px solid var(--stroke2);
+  display:grid;place-items:center;font-size:13px;color:var(--ink2)}
+.fitem .acts button:hover{background:var(--brandS);color:var(--brand)}
+.fitem .prev{margin-top:9px}
+.inspector{position:sticky;top:78px}
+.drophint{text-align:center;color:var(--muted);padding:34px 10px;font-weight:600;font-size:13px}
+
+/* ---- workflow ---- */
+.wf-step{display:flex;align-items:stretch;gap:12px;margin-bottom:8px}
+.wf-step .num{width:34px;flex:none;display:flex;flex-direction:column;align-items:center}
+.wf-step .num .dot{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));
+  color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;box-shadow:var(--shadow2)}
+.wf-step .num .line{flex:1;width:2px;background:var(--stroke);margin:4px 0}
+.wf-step .box{flex:1;background:var(--glass);border:1px solid var(--stroke);border-radius:12px;padding:12px}
+.wf-cond{margin-top:9px;padding:10px;border-radius:10px;background:var(--glass2);border:1px dashed var(--stroke)}
+
+/* ---- request timeline ---- */
+.tl{position:relative;padding-left:26px}
+.tl:before{content:"";position:absolute;left:9px;top:4px;bottom:4px;width:2px;background:var(--stroke)}
+.tl .ev{position:relative;margin-bottom:16px}
+.tl .ev .mk{position:absolute;left:-26px;top:1px;width:20px;height:20px;border-radius:50%;background:var(--glass);
+  border:2px solid var(--muted2);display:grid;place-items:center;font-size:10px}
+.tl .ev.ok .mk{border-color:var(--ok);color:var(--ok)}
+.tl .ev.bad .mk{border-color:var(--bad);color:var(--bad)}
+.tl .ev.info .mk{border-color:var(--info);color:var(--info)}
+.tl .ev .t{font-weight:700;font-size:13.5px}
+.tl .ev .m{font-size:12.5px;color:var(--muted);font-weight:600}
+.tl .ev .c{margin-top:5px;font-size:13px;background:var(--glass2);border:1px solid var(--stroke2);border-radius:10px;padding:8px 10px}
+
+/* ---- modal / toast ---- */
+.overlay{position:fixed;inset:0;z-index:60;background:rgba(15,23,42,.42);backdrop-filter:blur(4px);
+  display:flex;align-items:flex-end;justify-content:center;padding:0}
+@media(min-width:720px){.overlay{align-items:center;padding:24px}}
+.modal{background:var(--glass);border:1px solid var(--stroke);border-radius:20px 20px 0 0;box-shadow:var(--shadow);
+  width:100%;max-width:640px;max-height:92dvh;overflow:auto;backdrop-filter:blur(24px) saturate(1.4);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4)}
+@media(min-width:720px){.modal{border-radius:20px}}
+.modal .mh{position:sticky;top:0;background:var(--glass);border-bottom:1px solid var(--stroke);padding:16px 18px;
+  display:flex;align-items:center;gap:10px;z-index:2;backdrop-filter:blur(20px)}
+.modal .mh h3{margin:0;font-size:17px;font-weight:800}
+.modal .mb{padding:18px}
+.modal .mf{position:sticky;bottom:0;background:var(--glass);border-top:1px solid var(--stroke);padding:14px 18px;
+  display:flex;gap:10px;justify-content:flex-end;backdrop-filter:blur(20px)}
+.x{margin-left:auto;width:34px;height:34px;border-radius:10px;background:var(--glass2);display:grid;place-items:center;font-size:17px}
+.toasts{position:fixed;top:14px;right:14px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:calc(100vw - 28px)}
+.toast{background:var(--glass);border:1px solid var(--stroke);border-left:4px solid var(--brand);border-radius:12px;
+  padding:11px 14px;box-shadow:var(--shadow);font-weight:600;font-size:13.5px;animation:slidein .25s ease;backdrop-filter:blur(20px)}
+.toast.ok{border-left-color:var(--ok)}.toast.bad{border-left-color:var(--bad)}.toast.warn{border-left-color:var(--warn)}
+@keyframes slidein{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+
+.code-vis{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--ink);color:#fff;border-radius:10px;
+  padding:12px;text-align:center;font-weight:700;letter-spacing:2px;word-break:break-all}
+.barcode{display:flex;gap:1px;height:56px;align-items:stretch;justify-content:center;margin-bottom:6px}
+.barcode i{display:block}
+.rt-table{width:100%;border-collapse:collapse;font-size:13px}
+.rt-table th,.rt-table td{border:1px solid var(--stroke2);padding:6px 8px;text-align:left}
+.rt-table th{background:var(--glass2);font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+/* ---- mobile ---- */
+@media(max-width:960px){
+  .builder{grid-template-columns:1fr}
+  .palette,.inspector{position:static}
+}
+@media(max-width:820px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;z-index:70;left:0;top:0;width:270px;transform:translateX(-102%);transition:.25s;box-shadow:var(--shadow)}
+  .side.open{transform:none}
+  .menu-btn{display:grid;place-items:center;width:40px;height:40px;border-radius:11px;background:var(--glass2);border:1px solid var(--stroke);font-size:18px}
+  .scrim{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.35);display:none}
+  .scrim.open{display:block}
+  .content{padding:14px}
+  .f2{grid-template-columns:1fr}
+  .topbar h2{font-size:17px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side"></aside>
+  <div class="scrim" id="scrim" data-action="closeNav"></div>
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-btn" data-action="openNav">☰</button>
+      <div><h2 id="viewTitle">Dashboard</h2><div class="sub" id="viewSub"></div></div>
+      <div class="sp"></div>
+      <button class="bell" data-action="notifs" id="bell">🔔</button>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+<div id="modalRoot"></div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+/* ============================================================================
+   0 · UTILITIES
+   ========================================================================== */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const uid = (p='id')=>p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const peso = n=>'₱'+(Math.round((+n||0)*100)/100).toLocaleString('en-PH',{minimumFractionDigits:0,maximumFractionDigits:2});
+const num  = v=>{const n=parseFloat(v);return isNaN(n)?0:n;};
+const fmtDate=ts=>ts?new Date(ts).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'}):'';
+const fmtDT =ts=>ts?new Date(ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+const ago = ts=>{if(!ts)return'';const s=(Date.now()-ts)/1000;
+  if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';
+  if(s<604800)return Math.floor(s/86400)+'d ago';return fmtDate(ts);};
+const clone=o=>JSON.parse(JSON.stringify(o));
+function setPath(obj,path,val){const p=path.split('.');let o=obj;for(let i=0;i<p.length-1;i++){if(o[p[i]]==null)o[p[i]]={};o=o[p[i]];}o[p[p.length-1]]=val;}
+function getPath(obj,path){return path.split('.').reduce((o,k)=>o==null?undefined:o[k],obj);}
+
+/* ============================================================================
+   1 · STORAGE LAYER  (swap to Supabase by replacing adapter method bodies only)
+   Interface used by every engine: list / get / upsert / remove.
+   ========================================================================== */
+const Store = (()=>{
+  const KEY='ace_v1';
+  const adapter = {
+    /* --- localStorage adapter (default). Replace the 4 bodies below with
+       Supabase calls, keeping signatures, and nothing else changes. --- */
+    async _all(){ try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return{};} },
+    async _save(db){ localStorage.setItem(KEY,JSON.stringify(db)); },
+    async list(coll){ const db=await this._all(); return db[coll]||[]; },
+    async get(coll,id){ return (await this.list(coll)).find(x=>x.id===id)||null; },
+    async upsert(coll,rec){ const db=await this._all(); db[coll]=db[coll]||[];
+      const i=db[coll].findIndex(x=>x.id===rec.id);
+      rec.updatedAt=Date.now(); if(i<0){rec.createdAt=rec.createdAt||Date.now();db[coll].unshift(rec);} else db[coll][i]=rec;
+      await this._save(db); return rec; },
+    async remove(coll,id){ const db=await this._all(); db[coll]=(db[coll]||[]).filter(x=>x.id!==id); await this._save(db); },
+    async bulk(coll,arr){ const db=await this._all(); db[coll]=arr; await this._save(db); },
+    async raw(){ return this._all(); }
+  };
+  return adapter;
+})();
+
+/* ============================================================================
+   2 · CONFIGURATION LAYER
+   Field-type registry (the low-code catalogue) + seed directory/modules/templates.
+   Adding a field type = one entry here. Nothing else hardcoded.
+   ========================================================================== */
+const FieldTypes = {
+  // input fields ------------------------------------------------------------
+  text:{label:'Single Line Text',ic:'🔤',cat:'Basic',value:''},
+  paragraph:{label:'Paragraph',ic:'📄',cat:'Basic',value:''},
+  number:{label:'Number',ic:'#️⃣',cat:'Basic',value:''},
+  currency:{label:'Currency',ic:'💰',cat:'Basic',value:''},
+  date:{label:'Date',ic:'📅',cat:'Basic',value:''},
+  time:{label:'Time',ic:'⏰',cat:'Basic',value:''},
+  email:{label:'Email',ic:'✉️',cat:'Basic',value:''},
+  phone:{label:'Phone',ic:'📱',cat:'Basic',value:''},
+  // choice ------------------------------------------------------------------
+  dropdown:{label:'Dropdown',ic:'🔽',cat:'Choice',opts:true,value:''},
+  radio:{label:'Radio',ic:'🔘',cat:'Choice',opts:true,value:''},
+  checkbox:{label:'Checkbox',ic:'☑️',cat:'Choice',value:false},
+  multiselect:{label:'Multi Select',ic:'🗂️',cat:'Choice',opts:true,value:[]},
+  yesno:{label:'Yes / No',ic:'🔀',cat:'Choice',value:''},
+  rating:{label:'Rating',ic:'⭐',cat:'Choice',value:0},
+  // advanced ----------------------------------------------------------------
+  signature:{label:'Signature',ic:'✍️',cat:'Advanced',value:''},
+  location:{label:'Location',ic:'📍',cat:'Advanced',value:''},
+  qrcode:{label:'QR Code',ic:'🔳',cat:'Advanced',value:''},
+  barcode:{label:'Barcode',ic:'📊',cat:'Advanced',value:''},
+  image:{label:'Image Upload',ic:'🖼️',cat:'Advanced',value:''},
+  file:{label:'File Upload',ic:'📎',cat:'Advanced',value:''},
+  repeating:{label:'Repeating Table',ic:'🧾',cat:'Advanced',value:[]},
+  // pickers (data-driven) ---------------------------------------------------
+  people:{label:'People Picker',ic:'👤',cat:'Picker',source:'people',value:''},
+  project:{label:'Project Picker',ic:'🏗️',cat:'Picker',source:'projects',value:''},
+  department:{label:'Department Picker',ic:'🏢',cat:'Picker',source:'departments',value:''},
+  role:{label:'Role Picker',ic:'🎖️',cat:'Picker',source:'roles',value:''},
+  lookup:{label:'Dynamic Lookup',ic:'🔎',cat:'Picker',opts:true,value:''},
+  // computed / layout -------------------------------------------------------
+  formula:{label:'Formula Field',ic:'🧮',cat:'Computed',value:''},
+  calculated:{label:'Calculated Field',ic:'🟰',cat:'Computed',value:''},
+  hidden:{label:'Hidden Field',ic:'🙈',cat:'Computed',value:''},
+  divider:{label:'Section Divider',ic:'➖',cat:'Layout',layout:true},
+  heading:{label:'Heading',ic:'🔠',cat:'Layout',layout:true},
+  description:{label:'Description',ic:'💬',cat:'Layout',layout:true},
+};
+const FIELD_CATS=['Basic','Choice','Advanced','Picker','Computed','Layout'];
+
+const ICON_CHOICES=['📝','💰','🏗️','🧾','📋','🛠️','🚚','⛑️','🧯','📦','🗓️','✈️','👤','🎖️','📑','🔬','⚙️','🏢'];
+const COLOR_CHOICES=['#4f46e5','#0284c7','#059669','#d97706','#dc2626','#7c3aed','#db2777','#0d9488','#ca8a04','#475569'];
+const ACTION_TYPES=['approve','reject','return','revision','comment','delegate','escalate','forward','cancel'];
+
+/* -- seed data (only written once, on first run) -- */
+const SEED = {
+  people:[
+    {id:'u1',name:'Juan Dela Cruz',role:'Employee',department:'Construction',color:'#4f46e5'},
+    {id:'u2',name:'Ramon Silva',role:'Supervisor',department:'Construction',color:'#0284c7'},
+    {id:'u3',name:'Engr. Vic Reyes',role:'Construction Head',department:'Construction',color:'#059669'},
+    {id:'u4',name:'Grace Tan',role:'Finance',department:'Finance',color:'#d97706'},
+    {id:'u5',name:'Arch. Dan Pagdayunan',role:'CEO',department:'Executive',color:'#dc2626'},
+    {id:'u6',name:'Liza Cruz',role:'HR',department:'HR',color:'#db2777'},
+    {id:'u7',name:'Mark Uy',role:'Procurement',department:'Procurement',color:'#7c3aed'},
+    {id:'u8',name:'Engr. Paolo Lim',role:'Project Director',department:'Construction',color:'#0d9488'},
+  ],
+  roles:['Employee','Supervisor','Construction Head','Project Director','Finance','Procurement','HR','QAQC','CEO'].map(r=>({id:r,name:r})),
+  departments:['Construction','Finance','Design','HR','Sales','Procurement','QAQC','Executive'].map(d=>({id:d,name:d})),
+  modules:['Construction','Finance','Design','HR','Sales','Procurement','QAQC','Incentive','Inventory','Equipment','Documents'].map(m=>({id:m,name:m})),
+  projects:[
+    {id:'p1',name:'LP House'},{id:'p2',name:'Dela Cruz Residence'},
+    {id:'p3',name:'Skyline Tower'},{id:'p4',name:'Coastal Villa'},
+  ],
+};
+
+/* -- field factory -- */
+function makeField(type){
+  const def=FieldTypes[type];const f={id:uid('f'),type,key:'',label:def.label,help:'',required:false,width:'full'};
+  if(def.opts)f.options=[{label:'Option 1',value:'Option 1'},{label:'Option 2',value:'Option 2'}];
+  if(type==='yesno')f.options=[{label:'Yes',value:'Yes'},{label:'No',value:'No'}];
+  if(type==='repeating')f.columns=[{key:'item',label:'Item',type:'text'},{key:'qty',label:'Qty',type:'number'}];
+  if(type==='formula'||type==='calculated')f.expression='';
+  if(type==='lookup')f.source='';
+  if(def.layout){f.required=false;delete f.key;}
+  if(type==='heading')f.label='Section Heading';
+  if(type==='description')f.label='Add descriptive text here.';
+  return f;
+}
+function fieldKey(f){return f.key||('f_'+f.id.slice(-6));}
+
+/* ============================================================================
+   3 · VALIDATION ENGINE
+   ========================================================================== */
+const Validation = {
+  field(f,val){
+    if(FieldTypes[f.type]?.layout)return null;
+    const empty = val===''||val==null||(Array.isArray(val)&&!val.length)||val===false&&f.type!=='checkbox';
+    if(f.required && (val===''||val==null||(Array.isArray(val)&&!val.length)))return 'Required';
+    if(empty)return null;
+    if(f.type==='email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))return 'Invalid email';
+    if(f.type==='phone' && !/^[0-9+()\-\s]{7,}$/.test(val))return 'Invalid phone';
+    if((f.type==='number'||f.type==='currency') && isNaN(parseFloat(val)))return 'Must be a number';
+    return null;
+  },
+  form(form,values){
+    const errs={};
+    (form.fields||[]).forEach(f=>{const e=this.field(f,values[fieldKey(f)]);if(e)errs[f.id]=e;});
+    return errs;
+  }
+};
+
+/* ============================================================================
+   4 · FORM ENGINE  (config -> live form; also computes formulas)
+   ========================================================================== */
+const FormEngine = {
+  async pickerOptions(source){
+    if(!source)return[];
+    const rows=await Store.list(source);
+    return rows.map(r=>({label:r.name,value:r.id,sub:r.role||r.department||''}));
+  },
+  evalExpression(expr,values,form){
+    if(!expr)return '';
+    let s=expr.replace(/\{([^}]+)\}/g,(_,k)=>{
+      const f=(form.fields||[]).find(ff=>fieldKey(ff)===k.trim());
+      const v=f?values[fieldKey(f)]:values[k.trim()];
+      return '('+num(v)+')';
+    });
+    if(!/^[0-9+\-*/(). ]*$/.test(s))return 'ERR';
+    try{const r=Function('"use strict";return('+(s||'0')+')')();return isFinite(r)?Math.round(r*100)/100:'ERR';}catch(e){return 'ERR';}
+  }
+};
+
+/* ============================================================================
+   5 · WORKFLOW ENGINE  (build runtime steps from form.workflow + conditions)
+   ========================================================================== */
+const WorkflowEngine = {
+  condOps:[['gt','>'],['gte','≥'],['lt','<'],['lte','≤'],['eq','='],['neq','≠']],
+  test(cond,values,form){
+    if(!cond||!cond.field)return true;
+    const f=(form.fields||[]).find(ff=>fieldKey(ff)===cond.field);
+    const raw=values[cond.field];
+    const isNumType=f && (f.type==='number'||f.type==='currency');
+    const a=isNumType?num(raw):String(raw??'').toLowerCase();
+    const b=isNumType?num(cond.value):String(cond.value??'').toLowerCase();
+    switch(cond.op){case'gt':return a>b;case'gte':return a>=b;case'lt':return a<b;
+      case'lte':return a<=b;case'eq':return a===b;case'neq':return a!==b;default:return true;}
+  },
+  buildRuntime(form,values){
+    const steps=(form.workflow?.steps||[]).filter(s=>this.test(s.condition,values,form));
+    return steps.map((s,i)=>({
+      idx:i,stepId:s.id,name:s.name,approverType:s.approverType,role:s.role,userId:s.userId,
+      mode:s.mode||'sequential',slaHours:s.slaHours||0,
+      status:i===0?'pending':'waiting',decidedBy:'',decidedAt:0,action:'',remarks:''
+    }));
+  },
+  approverLabel(step){
+    if(step.approverType==='user'){const u=DIR.people.find(p=>p.id===step.userId);return u?u.name:'(user)';}
+    return step.role||'(role)';
+  }
+};
+
+/* ============================================================================
+   6 · PERMISSION ENGINE
+   ========================================================================== */
+const Permission = {
+  can(form,act){ // act: create/submit/edit/approve/reject/delete/archive
+    const perms=form?.permissions||{};
+    const allowed=perms[act];
+    if(!allowed||!allowed.length||allowed.includes('*'))return true;
+    return allowed.includes(APP.user.role);
+  },
+  isApproverFor(step){
+    if(!step)return false;
+    if(step.approverType==='user')return step.userId===APP.user.id;
+    return step.role===APP.user.role;
+  }
+};
+
+/* ============================================================================
+   7 · APPROVAL ENGINE
+   ========================================================================== */
+const Approval = {
+  async submit(form,values){
+    const steps=WorkflowEngine.buildRuntime(form,values);
+    const req={
+      id:uid('req'),formId:form.id,formName:form.name,icon:form.icon,color:form.color,
+      module:form.module,department:form.department,
+      values,submittedBy:APP.user.id,submittedByName:APP.user.name,submittedAt:Date.now(),
+      status:steps.length?'pending':'approved',currentStep:0,steps,
+      timeline:[{at:Date.now(),by:APP.user.name,type:'submitted',text:'Submitted request'}],
+      comments:[],version:1
+    };
+    if(!steps.length)req.timeline.push({at:Date.now(),by:'System',type:'approved',text:'Auto-approved (no workflow steps)'});
+    await Store.upsert('requests',req);
+    await this._notifyCurrent(req,form);
+    return req;
+  },
+  async _notifyCurrent(req){
+    const step=req.steps[req.currentStep];
+    if(!step)return;
+    const targets=DIR.people.filter(p=>step.approverType==='user'?p.id===step.userId:p.role===step.role);
+    for(const t of targets)await Notify.push(t.id,`"${req.formName}" needs your approval (${step.name})`,req.id);
+  },
+  async act(req,action,remarks){
+    const step=req.steps[req.currentStep];
+    const evt={at:Date.now(),by:APP.user.name,type:action,text:'',remarks:remarks||''};
+    const label={approve:'Approved',reject:'Rejected',return:'Returned',revision:'Requested revision',
+      comment:'Commented',delegate:'Delegated',escalate:'Escalated',forward:'Forwarded',cancel:'Cancelled'}[action];
+    if(action==='comment'){evt.text='Comment';req.comments.push({by:APP.user.name,at:Date.now(),text:remarks||''});
+      req.timeline.push(evt);await Store.upsert('requests',req);return req;}
+    if(step){step.decidedBy=APP.user.name;step.decidedAt=Date.now();step.remarks=remarks||'';step.action=action;}
+    if(action==='approve'){
+      if(step)step.status='approved';
+      evt.text=`${label} · ${step?step.name:''}`;
+      req.timeline.push(evt);
+      const next=req.currentStep+1;
+      if(next>=req.steps.length){req.status='approved';
+        req.timeline.push({at:Date.now(),by:'System',type:'completed',text:'All approvals complete'});}
+      else{req.currentStep=next;req.steps[next].status='pending';await this._notifyCurrent(req);}
+    }else if(action==='reject'){
+      if(step)step.status='rejected';req.status='rejected';evt.text=`${label} · ${step?step.name:''}`;req.timeline.push(evt);
+      await Notify.push(req.submittedBy,`Your "${req.formName}" was rejected`,req.id);
+    }else if(action==='return'||action==='revision'){
+      if(step)step.status='pending';req.status=action==='return'?'returned':'revision';
+      evt.text=label;req.timeline.push(evt);
+      await Notify.push(req.submittedBy,`Your "${req.formName}" needs changes`,req.id);
+    }else if(action==='cancel'){
+      req.status='cancelled';evt.text=label;req.timeline.push(evt);
+    }else if(action==='delegate'||action==='forward'){
+      const to=DIR.people.find(p=>p.id===remarks);
+      if(to&&step){step.approverType='user';step.userId=to.id;step.status='pending';step.decidedAt=0;step.decidedBy='';}
+      evt.text=`${label} to ${to?to.name:'?'}`;evt.remarks='';req.timeline.push(evt);
+      if(to)await Notify.push(to.id,`"${req.formName}" was ${label.toLowerCase()} to you`,req.id);
+    }else if(action==='escalate'){
+      evt.text=label;req.timeline.push(evt);
+    }
+    await Store.upsert('requests',req);
+    return req;
+  }
+};
+
+/* ============================================================================
+   8 · NOTIFICATION ENGINE
+   ========================================================================== */
+const Notify = {
+  async push(userId,text,requestId){
+    await Store.upsert('notifications',{id:uid('n'),userId,text,requestId,read:false,at:Date.now()});
+  },
+  async mine(){return (await Store.list('notifications')).filter(n=>n.userId===APP.user.id).sort((a,b)=>b.at-a.at);},
+  async unread(){return (await this.mine()).filter(n=>!n.read).length;},
+  async markAll(){const all=await Store.list('notifications');
+    all.forEach(n=>{if(n.userId===APP.user.id)n.read=true;});await Store.bulk('notifications',all);}
+};
+
+/* ============================================================================
+   9 · UI ENGINE  (app state, router, rendering, toasts, modals)
+   ========================================================================== */
+const APP={view:'dashboard',user:null,editing:null,navOpen:false};
+const DIR={people:[],roles:[],departments:[],modules:[],projects:[]};
+
+function toast(msg,kind=''){const t=document.createElement('div');t.className='toast '+kind;t.textContent=msg;
+  $('#toasts').appendChild(t);setTimeout(()=>{t.style.opacity=0;t.style.transition='.3s';setTimeout(()=>t.remove(),300);},2600);}
+
+function modal({title,body,footer,wide}){
+  const root=$('#modalRoot');
+  root.innerHTML=`<div class="overlay" data-action="closeModalBg"><div class="modal" style="${wide?'max-width:820px':''}" data-stop>
+    <div class="mh"><h3>${esc(title)}</h3><button class="x" data-action="closeModal">✕</button></div>
+    <div class="mb">${body}</div>${footer?`<div class="mf">${footer}</div>`:''}</div></div>`;
+}
+function closeModal(){$('#modalRoot').innerHTML='';}
+
+const NAV=[
+  {id:'dashboard',ic:'🏠',label:'Dashboard'},
+  {id:'inbox',ic:'📥',label:'My Approvals'},
+  {id:'requests',ic:'🗂️',label:'Requests'},
+  {id:'forms',ic:'🧩',label:'Form Builder'},
+  {id:'templates',ic:'📚',label:'Templates'},
+  {id:'settings',ic:'⚙️',label:'Configuration'},
+];
+
+async function renderNav(){
+  const inbox=await inboxCount();
+  $('#side').innerHTML=`
+    <div class="logo"><div class="mark">AU</div><div><h1>Approval Center</h1><small>AU One ERP</small></div></div>
+    <div class="nav">${NAV.map(n=>`<button data-action="go" data-view="${n.id}" class="${APP.view===n.id?'on':''}">
+      <span class="ic">${n.ic}</span><span>${n.label}</span>${n.id==='inbox'&&inbox?`<span class="badge">${inbox}</span>`:''}</button>`).join('')}</div>
+    <div class="who"><label>Signed in as</label>
+      <select data-action="switchUser">${DIR.people.map(p=>`<option value="${p.id}" ${p.id===APP.user.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+      <div class="role">🎖️ ${esc(APP.user.role)} · ${esc(APP.user.department)}</div>
+    </div>`;
+}
+
+async function inboxCount(){
+  const reqs=await Store.list('requests');
+  return reqs.filter(r=>['pending','inprogress'].includes(r.status)&&Permission.isApproverFor(r.steps[r.currentStep])).length;
+}
+
+const TITLES={dashboard:['Dashboard','Overview of approvals and activity'],
+  inbox:['My Approvals','Requests waiting on your decision'],
+  requests:['Requests','Every submission across the organisation'],
+  forms:['Form Builder','Design configuration-driven request forms'],
+  templates:['Templates','Start from a pre-built form template'],
+  settings:['Configuration','Directory, roles, departments & modules']};
+
+async function render(){
+  await renderNav();
+  const [t,s]=TITLES[APP.view]||['',''];
+  $('#viewTitle').textContent=t;$('#viewSub').textContent=s;
+  const bell=$('#bell');const un=await Notify.unread();bell.innerHTML='🔔'+(un?`<span class="dot"></span>`:'');
+  const c=$('#content');
+  if(APP.view==='dashboard')return renderDashboard(c);
+  if(APP.view==='inbox')return renderInbox(c);
+  if(APP.view==='requests')return renderRequests(c);
+  if(APP.view==='forms')return APP.editing?renderBuilder(c):renderForms(c);
+  if(APP.view==='templates')return renderTemplates(c);
+  if(APP.view==='settings')return renderSettings(c);
+}
+
+/* ---------- Dashboard ---------- */
+async function renderDashboard(c){
+  const reqs=await Store.list('requests');const forms=await Store.list('forms');
+  const mine=reqs.filter(r=>r.submittedBy===APP.user.id);
+  const inbox=reqs.filter(r=>['pending','inprogress'].includes(r.status)&&Permission.isApproverFor(r.steps[r.currentStep]));
+  const pending=reqs.filter(r=>r.status==='pending').length;
+  const approved=reqs.filter(r=>r.status==='approved').length;
+  const rejected=reqs.filter(r=>r.status==='rejected').length;
+  c.innerHTML=`
+  <div class="kpis">
+    <div class="card kpi"><div class="n" style="color:var(--warn)">${inbox.length}</div><div class="l">Awaiting you</div></div>
+    <div class="card kpi"><div class="n">${pending}</div><div class="l">In progress</div></div>
+    <div class="card kpi"><div class="n" style="color:var(--ok)">${approved}</div><div class="l">Approved</div></div>
+    <div class="card kpi"><div class="n" style="color:var(--bad)">${rejected}</div><div class="l">Rejected</div></div>
+    <div class="card kpi"><div class="n">${forms.filter(f=>f.status==='published').length}</div><div class="l">Live forms</div></div>
+  </div>
+  <div class="sectitle">Waiting on you</div>
+  ${inbox.length?`<div class="grid cols">${inbox.slice(0,6).map(reqCard).join('')}</div>`:emptyCard('🎉','You are all caught up','No approvals need your attention.')}
+  <div class="sectitle">Your recent requests</div>
+  ${mine.length?`<div class="grid cols">${mine.slice(0,6).map(reqCard).join('')}</div>`:emptyCard('📝','No requests yet','Submit one from a published form.')}
+  <div style="margin-top:20px" class="row wrap">
+    <button class="btn primary" data-action="go" data-view="forms">🧩 Build a form</button>
+    <button class="btn" data-action="go" data-view="templates">📚 Use a template</button>
+  </div>`;
+}
+function emptyCard(ic,t,m){return `<div class="card pad empty"><div class="big">${ic}</div><div style="font-size:15px;color:var(--ink)">${t}</div><div class="small">${m}</div></div>`;}
+function reqCard(r){const step=r.steps[r.currentStep];
+  return `<div class="card formcard" data-action="openReq" data-id="${r.id}"><div class="bar" style="background:${r.color||'#4f46e5'}"></div>
+    <div class="body"><div class="row"><div class="icon" style="background:${r.color||'#4f46e5'}">${r.icon||'📝'}</div>
+      <span class="sp"></span><span class="status ${r.status}">${r.status}</span></div>
+    <h3>${esc(r.formName)}</h3>
+    <div class="small muted">by ${esc(r.submittedByName)} · ${ago(r.submittedAt)}</div>
+    <div class="meta">${r.status==='pending'&&step?`<span class="chip">⏳ ${esc(step.name)}</span>`:''}
+      ${r.module?`<span class="chip">🧱 ${esc(r.module)}</span>`:''}</div></div></div>`;}
+
+/* ---------- Inbox ---------- */
+async function renderInbox(c){
+  const reqs=await Store.list('requests');
+  const list=reqs.filter(r=>['pending','inprogress'].includes(r.status)&&Permission.isApproverFor(r.steps[r.currentStep]));
+  c.innerHTML=list.length?`<div class="grid cols">${list.map(reqCard).join('')}</div>`
+    :emptyCard('📭','Inbox zero','No requests are waiting on your role right now. Switch user in the sidebar to test other approvers.');
+}
+
+/* ---------- Requests ---------- */
+async function renderRequests(c){
+  const reqs=await Store.list('requests');
+  const f=APP.reqFilter||'all';
+  const list=reqs.filter(r=>f==='all'||r.status===f);
+  const counts=k=>reqs.filter(r=>r.status===k).length;
+  c.innerHTML=`<div class="row wrap" style="margin-bottom:14px">
+    ${['all','pending','approved','rejected','returned','cancelled'].map(k=>`<button class="chip" data-action="reqFilter" data-f="${k}"
+      style="${f===k?'background:var(--brand);color:#fff;border-color:transparent':''}">${k[0].toUpperCase()+k.slice(1)} ${k==='all'?reqs.length:counts(k)}</button>`).join('')}</div>
+    ${list.length?`<div class="grid cols">${list.map(reqCard).join('')}</div>`:emptyCard('🗂️','No requests','Nothing matches this filter.')}`;
+}
+
+/* ---------- Request detail ---------- */
+async function openReq(id){
+  const r=await Store.get('requests',id);if(!r)return;
+  const form=await Store.get('forms',r.formId);
+  const step=r.steps[r.currentStep];
+  const canAct=['pending','inprogress'].includes(r.status)&&Permission.isApproverFor(step);
+  const isOwner=r.submittedBy===APP.user.id;
+  const body=`
+    <div class="row" style="margin-bottom:10px"><div class="icon formcard" style="width:44px;height:44px;background:${r.color||'#4f46e5'};border-radius:12px;display:grid;place-items:center;font-size:22px;color:#fff">${r.icon||'📝'}</div>
+      <div><div style="font-weight:800;font-size:16px">${esc(r.formName)}</div>
+      <div class="small muted">by ${esc(r.submittedByName)} · ${fmtDT(r.submittedAt)}</div></div>
+      <span class="sp"></span><span class="status ${r.status}">${r.status}</span></div>
+
+    <div class="sectitle" style="margin-top:6px">Approval chain</div>
+    <div>${r.steps.map((s,i)=>`<div class="wf-step"><div class="num"><div class="dot" style="${s.status==='approved'?'background:var(--ok)':s.status==='rejected'?'background:var(--bad)':i===r.currentStep&&r.status==='pending'?'':'background:var(--muted2)'}">${s.status==='approved'?'✓':s.status==='rejected'?'✕':i+1}</div>${i<r.steps.length-1?'<div class="line"></div>':''}</div>
+      <div class="box"><div class="row"><b>${esc(s.name)}</b><span class="sp"></span><span class="status ${s.status==='approved'?'approved':s.status==='rejected'?'rejected':s.status==='pending'?'pending':'draft'}">${s.status}</span></div>
+      <div class="small muted">${esc(WorkflowEngine.approverLabel(s))}${s.decidedBy?` · ${esc(s.decidedBy)} ${ago(s.decidedAt)}`:''}</div>
+      ${s.remarks?`<div class="small" style="margin-top:4px">💬 ${esc(s.remarks)}</div>`:''}</div></div>`).join('')}</div>
+
+    <div class="sectitle">Submitted details</div>
+    <div class="card pad" style="box-shadow:none">${renderReadonly(form,r.values)}</div>
+
+    <div class="sectitle">Activity timeline</div>
+    <div class="tl">${r.timeline.slice().reverse().map(ev=>{
+      const k=['approved','completed'].includes(ev.type)?'ok':['rejected','cancel'].includes(ev.type)?'bad':['return','revision','delegate','forward','escalate'].includes(ev.type)?'info':'';
+      const mk=ev.type==='approved'||ev.type==='completed'?'✓':ev.type==='rejected'?'✕':ev.type==='comment'?'💬':'•';
+      return `<div class="ev ${k}"><div class="mk">${mk}</div><div class="t">${esc(ev.text||ev.type)}</div>
+        <div class="m">${esc(ev.by)} · ${fmtDT(ev.at)}</div>${ev.remarks?`<div class="c">${esc(ev.remarks)}</div>`:''}</div>`;}).join('')}</div>`;
+
+  let footer='';
+  if(canAct){footer=`<button class="btn ghost" data-action="reqMore" data-id="${r.id}">⋯ More</button>
+    <button class="btn bad" data-action="reqAct" data-id="${r.id}" data-act="reject">Reject</button>
+    <button class="btn" data-action="reqAct" data-id="${r.id}" data-act="return">Return</button>
+    <button class="btn ok" data-action="reqAct" data-id="${r.id}" data-act="approve">Approve</button>`;}
+  else if(isOwner&&['pending','returned','revision'].includes(r.status)){footer=`<button class="btn bad" data-action="reqAct" data-id="${r.id}" data-act="cancel">Cancel request</button>`;}
+  modal({title:'Request',body,footer,wide:true});
+}
+function renderReadonly(form,values){
+  if(!form)return '<div class="muted small">Form definition not found.</div>';
+  return (form.fields||[]).filter(f=>!FieldTypes[f.type]?.layout&&f.type!=='hidden').map(f=>{
+    let v=values[fieldKey(f)];let disp;
+    if(f.type==='currency')disp=peso(v);
+    else if(f.type==='signature'&&v)disp=`<img src="${v}" style="max-height:70px;border:1px solid var(--stroke);border-radius:8px;background:#fff">`;
+    else if((f.type==='image')&&v)disp=`<img src="${v}" style="max-height:120px;border-radius:8px">`;
+    else if(f.type==='file'&&v)disp=`<a href="${v}" download>Download file</a>`;
+    else if(f.type==='multiselect'&&Array.isArray(v))disp=v.join(', ')||'—';
+    else if(f.type==='rating')disp='★'.repeat(+v||0)+'☆'.repeat(5-(+v||0));
+    else if(f.type==='repeating'&&Array.isArray(v))disp=repeatReadonly(f,v);
+    else if(['people','project','department','role'].includes(f.type)){const src=DIR[FieldTypes[f.type].source]||[];disp=esc((src.find(x=>x.id===v)||{}).name||v||'—');}
+    else disp=esc(v||'—');
+    return `<div class="field" style="margin-bottom:10px"><label>${esc(f.label)}</label><div style="font-weight:600">${disp||'—'}</div></div>`;
+  }).join('')||'<div class="muted small">No fields.</div>';
+}
+function repeatReadonly(f,rows){if(!rows.length)return '—';
+  return `<table class="rt-table"><thead><tr>${f.columns.map(c=>`<th>${esc(c.label)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${f.columns.map(c=>`<td>${esc(r[c.key]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;}
+
+/* ---------- Forms list ---------- */
+async function renderForms(c){
+  const forms=(await Store.list('forms')).filter(f=>!f.isTemplate);
+  c.innerHTML=`<div class="row" style="margin-bottom:14px"><button class="btn primary" data-action="newForm">＋ Create Form</button>
+    <span class="sp"></span><span class="chip">${forms.length} form(s)</span></div>
+    ${forms.length?`<div class="grid cols">${forms.map(formCard).join('')}</div>`
+      :emptyCard('🧩','No forms yet','Click “Create Form” to build one with drag-and-drop, or start from a template.')}`;
+}
+function formCard(f){return `<div class="card formcard"><div class="bar" style="background:${f.color}"></div>
+  <div class="body"><div class="row"><div class="icon" style="background:${f.color}">${f.icon}</div><span class="sp"></span>
+    <span class="status ${f.status}">${f.status}</span></div>
+  <h3>${esc(f.name)}</h3><div class="small muted">${esc(f.description||'No description')}</div>
+  <div class="meta"><span class="chip">🧱 ${esc(f.module||'—')}</span><span class="chip">v${f.version||1}</span>
+    <span class="chip">${(f.fields||[]).length} fields</span><span class="chip">${(f.workflow?.steps||[]).length} steps</span></div>
+  <div class="row wrap" style="margin-top:12px">
+    <button class="btn sm primary" data-action="editForm" data-id="${f.id}">Edit</button>
+    ${f.status==='published'?`<button class="btn sm ok" data-action="useForm" data-id="${f.id}">Submit</button>`:''}
+    <button class="btn sm" data-action="dupForm" data-id="${f.id}">Duplicate</button>
+    <button class="btn sm ghost" data-action="formMore" data-id="${f.id}">⋯</button>
+  </div></div></div>`;}
+
+async function newForm(){
+  const f={id:uid('form'),name:'Untitled Form',description:'',icon:'📝',color:'#4f46e5',
+    department:DIR.departments[0]?.id||'',module:DIR.modules[0]?.id||'',category:'General',
+    version:1,status:'draft',isTemplate:false,fields:[],
+    workflow:{steps:[{id:uid('s'),name:'Supervisor',approverType:'role',role:'Supervisor',mode:'sequential',condition:null,slaHours:24}]},
+    permissions:{create:['*'],submit:['*'],edit:['*'],approve:['*'],delete:['*'],archive:['*']}};
+  await Store.upsert('forms',f);APP.editing=f.id;APP.builderTab='fields';render();
+}
+
+/* ---------- FORM BUILDER ---------- */
+let BUILDER_SEL=null;
+async function renderBuilder(c){
+  const f=await Store.get('forms',APP.editing);if(!f){APP.editing=null;return render();}
+  const tab=APP.builderTab||'fields';
+  c.innerHTML=`
+  <div class="row wrap" style="margin-bottom:14px">
+    <button class="btn ghost" data-action="closeBuilder">‹ All forms</button>
+    <div class="toggle">
+      <button class="${tab==='fields'?'on':''}" data-action="btab" data-t="fields">🧱 Fields</button>
+      <button class="${tab==='workflow'?'on':''}" data-action="btab" data-t="workflow">🔁 Workflow</button>
+      <button class="${tab==='settings'?'on':''}" data-action="btab" data-t="settings">⚙️ Settings</button>
+    </div>
+    <span class="sp"></span>
+    <span class="status ${f.status}">${f.status}</span>
+    ${f.status==='published'?`<button class="btn" data-action="setStatus" data-s="draft">Unpublish</button>`
+      :`<button class="btn primary" data-action="setStatus" data-s="published">Publish</button>`}
+    ${f.status==='published'?`<button class="btn ok" data-action="useForm" data-id="${f.id}">Preview / Submit</button>`:''}
+  </div>
+  <div id="builderBody"></div>`;
+  if(tab==='fields')renderBuilderFields(f);
+  else if(tab==='workflow')renderBuilderWorkflow(f);
+  else renderBuilderSettings(f);
+}
+
+function renderBuilderFields(f){
+  const sel=(f.fields||[]).find(x=>x.id===BUILDER_SEL)||null;
+  const palette=FIELD_CATS.map(cat=>`<div class="pal-cat">${cat}</div>`+
+    Object.entries(FieldTypes).filter(([k,d])=>d.cat===cat).map(([k,d])=>
+      `<div class="pal-item" data-action="addField" data-t="${k}"><span class="ic">${d.ic}</span>${d.label}</div>`).join('')).join('');
+  $('#builderBody').innerHTML=`<div class="builder">
+    <div class="palette"><div class="small muted" style="margin-bottom:6px;font-weight:700">Tap a field to add it →</div>${palette}</div>
+    <div><div class="canvas" id="canvas" data-sortable>
+      ${(f.fields||[]).length?f.fields.map((fl,i)=>builderFieldRow(fl,i)).join(''):'<div class="drophint">Your form is empty.<br>Tap fields from the left to add them, then drag ⋮⋮ to reorder.</div>'}
+    </div></div>
+    <div class="inspector">${sel?inspector(sel,f):'<div class="card pad muted small">Select a field to edit its properties, options, validation and width.</div>'}</div>
+  </div>`;
+  if(f.fields?.length)makeSortable($('#canvas'),async(from,to)=>{
+    const arr=f.fields;arr.splice(to,0,arr.splice(from,1)[0]);await Store.upsert('forms',f);renderBuilderFields(f);
+  });
+}
+function builderFieldRow(fl,i){const d=FieldTypes[fl.type];const layout=d.layout;
+  return `<div class="fitem ${fl.id===BUILDER_SEL?'sel':''} ${layout?'layout':''}" data-idx="${i}" data-fid="${fl.id}" data-action="selField">
+    <div class="handle" data-handle>⋮⋮</div>
+    <div class="fh"><span>${d.ic}</span><span class="t">${esc(fl.label)}${fl.required?' <span class="req">*</span>':''}</span>
+      <span class="ty">${d.label}</span>
+      <div class="acts">
+        <button data-action="dupField" data-fid="${fl.id}" title="Duplicate">⧉</button>
+        <button data-action="delField" data-fid="${fl.id}" title="Delete">🗑</button>
+      </div></div>
+    <div class="prev">${previewInput(fl,'',true)}</div></div>`;}
+
+function inspector(fl,f){const d=FieldTypes[fl.type];
+  let extra='';
+  if(d.opts){extra=`<div class="field"><label>Options</label>
+    <div id="optList">${(fl.options||[]).map((o,i)=>`<div class="opt-row"><input class="inp" data-opt="${i}" value="${esc(o.label)}">
+      <button class="btn sm ghost" data-action="delOpt" data-i="${i}">✕</button></div>`).join('')}</div>
+    <button class="btn sm" data-action="addOpt">＋ Add option</button></div>`;}
+  if(fl.type==='lookup'){extra+=`<div class="field"><label>Lookup source</label>
+    <select class="inp" data-prop="source"><option value="">— choose —</option>
+    ${['people','projects','departments','roles','modules'].map(s=>`<option value="${s}" ${fl.source===s?'selected':''}>${s}</option>`).join('')}</select></div>`;}
+  if(fl.type==='formula'||fl.type==='calculated'){extra=`<div class="field"><label>Expression</label>
+    <input class="inp mono" data-prop="expression" value="${esc(fl.expression||'')}" placeholder="e.g. {qty} * {unit_price}">
+    <div class="help">Reference other fields by their <b>key</b> in braces. Operators: + − * / ( ).</div></div>`;}
+  if(fl.type==='repeating'){extra=`<div class="field"><label>Table columns</label>
+    <div id="colList">${(fl.columns||[]).map((col,i)=>`<div class="opt-row"><input class="inp" data-col="${i}" value="${esc(col.label)}">
+      <button class="btn sm ghost" data-action="delCol" data-i="${i}">✕</button></div>`).join('')}</div>
+    <button class="btn sm" data-action="addCol">＋ Add column</button></div>`;}
+  const isLayout=d.layout;
+  return `<div class="card pad"><div class="row" style="margin-bottom:8px"><b>${d.ic} ${d.label}</b>
+    <span class="sp"></span><button class="btn sm ghost" data-action="delField" data-fid="${fl.id}">Delete</button></div>
+    <div class="field"><label>${isLayout?'Text':'Label'}</label><input class="inp" data-prop="label" value="${esc(fl.label)}"></div>
+    ${isLayout?'':`
+    <div class="field"><label>Field key <span class="muted tiny">(for formulas & conditions)</span></label>
+      <input class="inp mono" data-prop="key" value="${esc(fl.key||'')}" placeholder="${fieldKey(fl)}"></div>
+    <div class="field"><label>Help text</label><input class="inp" data-prop="help" value="${esc(fl.help||'')}"></div>
+    ${extra}
+    <div class="f2"><label class="checkline"><input type="checkbox" data-prop="required" ${fl.required?'checked':''}> Required</label>
+      <div class="field" style="margin:0"><label>Width</label><select class="inp" data-prop="width">
+        <option value="full" ${fl.width==='full'?'selected':''}>Full</option>
+        <option value="half" ${fl.width==='half'?'selected':''}>Half</option></select></div></div>`}
+  </div>`;
+}
+
+function renderBuilderWorkflow(f){
+  const steps=f.workflow?.steps||[];
+  $('#builderBody').innerHTML=`<div style="max-width:720px">
+    <div class="card pad" style="margin-bottom:12px"><div class="small muted">Approvals run top-to-bottom. Add a <b>condition</b> to a step to make it apply only in certain cases (e.g. amount &gt; 100,000 requires CEO). Set the approver to a <b>role</b> or a specific <b>person</b>.</div></div>
+    <div class="wf-step"><div class="num"><div class="dot" style="background:var(--muted2)">▶</div><div class="line"></div></div>
+      <div class="box"><b>Submitter</b><div class="small muted">Whoever fills out and submits the form</div></div></div>
+    ${steps.map((s,i)=>wfStepBox(s,i,f)).join('')}
+    <div class="wf-step"><div class="num"><div class="dot" style="background:var(--ok)">✓</div></div>
+      <div class="box"><b>Completed</b><div class="small muted">All approvals granted</div></div></div>
+    <button class="btn primary" data-action="addStep" style="margin-top:6px">＋ Add approval step</button>
+  </div>`;
+}
+function wfStepBox(s,i,f){
+  const roleOpts=DIR.roles.map(r=>`<option value="${r.id}" ${s.role===r.id?'selected':''}>${esc(r.name)}</option>`).join('');
+  const userOpts=DIR.people.map(p=>`<option value="${p.id}" ${s.userId===p.id?'selected':''}>${esc(p.name)} (${esc(p.role)})</option>`).join('');
+  const fieldOpts=(f.fields||[]).filter(fl=>!FieldTypes[fl.type]?.layout).map(fl=>`<option value="${fieldKey(fl)}" ${s.condition?.field===fieldKey(fl)?'selected':''}>${esc(fl.label)}</option>`).join('');
+  return `<div class="wf-step"><div class="num"><div class="dot">${i+1}</div><div class="line"></div></div>
+    <div class="box"><div class="row" style="margin-bottom:8px"><input class="inp" style="max-width:200px" data-step="${s.id}" data-sp="name" value="${esc(s.name)}" placeholder="Step name">
+      <span class="sp"></span>
+      <button class="btn sm ghost" data-action="moveStep" data-id="${s.id}" data-dir="-1">▲</button>
+      <button class="btn sm ghost" data-action="moveStep" data-id="${s.id}" data-dir="1">▼</button>
+      <button class="btn sm ghost" data-action="delStep" data-id="${s.id}">🗑</button></div>
+    <div class="f2">
+      <div class="field" style="margin:0"><label>Approver type</label><select class="inp" data-step="${s.id}" data-sp="approverType"><option value="role" ${s.approverType==='role'?'selected':''}>Role</option><option value="user" ${s.approverType==='user'?'selected':''}>Specific person</option></select></div>
+      <div class="field" style="margin:0"><label>${s.approverType==='user'?'Person':'Role'}</label>
+        ${s.approverType==='user'?`<select class="inp" data-step="${s.id}" data-sp="userId">${userOpts}</select>`:`<select class="inp" data-step="${s.id}" data-sp="role">${roleOpts}</select>`}</div>
+      <div class="field" style="margin:0"><label>Mode</label><select class="inp" data-step="${s.id}" data-sp="mode">
+        ${['sequential','parallel','optional','automatic'].map(m=>`<option value="${m}" ${s.mode===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="field" style="margin:0"><label>SLA (hours)</label><input class="inp" data-step="${s.id}" data-sp="slaHours" value="${s.slaHours||''}" placeholder="e.g. 24"></div>
+    </div>
+    <div class="wf-cond"><div class="row"><b class="small">Condition</b><span class="sp"></span>
+      <label class="checkline" style="margin:0;padding:5px 9px"><input type="checkbox" data-action="toggleCond" data-id="${s.id}" ${s.condition?'checked':''}> only if…</label></div>
+      ${s.condition?`<div class="f2" style="margin-top:8px">
+        <select class="inp" data-step="${s.id}" data-cond="field"><option value="">— field —</option>${fieldOpts}</select>
+        <select class="inp" data-step="${s.id}" data-cond="op">${WorkflowEngine.condOps.map(([v,l])=>`<option value="${v}" ${s.condition.op===v?'selected':''}>${l}</option>`).join('')}</select>
+        <input class="inp full" data-step="${s.id}" data-cond="value" value="${esc(s.condition.value||'')}" placeholder="value (e.g. 100000 or Finance)"></div>`:''}
+    </div></div></div>`;
+}
+
+function renderBuilderSettings(f){
+  $('#builderBody').innerHTML=`<div style="max-width:720px">
+  <div class="card pad">
+    <div class="field"><label>Form name</label><input class="inp" data-prop="name" value="${esc(f.name)}"></div>
+    <div class="field"><label>Description</label><textarea class="inp" data-prop="description">${esc(f.description||'')}</textarea></div>
+    <div class="field"><label>Icon</label><div class="row wrap">${ICON_CHOICES.map(ic=>`<button class="btn sm ${f.icon===ic?'primary':''}" data-action="setIcon" data-v="${ic}" style="font-size:18px">${ic}</button>`).join('')}</div></div>
+    <div class="field"><label>Colour</label><div class="row wrap">${COLOR_CHOICES.map(col=>`<button data-action="setColor" data-v="${col}" style="width:30px;height:30px;border-radius:9px;background:${col};border:2px solid ${f.color===col?'var(--ink)':'transparent'}"></button>`).join('')}</div></div>
+    <div class="f2">
+      <div class="field"><label>Department</label><select class="inp" data-prop="department">${DIR.departments.map(d=>`<option value="${d.id}" ${f.department===d.id?'selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>Module</label><select class="inp" data-prop="module">${DIR.modules.map(m=>`<option value="${m.id}" ${f.module===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>Category</label><input class="inp" data-prop="category" value="${esc(f.category||'')}"></div>
+      <div class="field"><label>Version</label><input class="inp" data-prop="version" value="${f.version||1}"></div>
+    </div>
+  </div>
+  <div class="card pad" style="margin-top:12px">
+    <b>Permissions</b><div class="small muted" style="margin-bottom:10px">Which roles may perform each action. Empty = everyone.</div>
+    ${['submit','approve','edit','delete','archive'].map(act=>`<div class="field"><label>Who can ${act}</label>
+      <div class="row wrap">${DIR.roles.map(r=>{const on=(f.permissions?.[act]||[]).includes(r.id);
+        return `<button class="chip" data-action="togglePerm" data-act="${act}" data-r="${r.id}" style="${on?'background:var(--brand);color:#fff;border-color:transparent':''}">${esc(r.name)}</button>`;}).join('')}</div>
+      <div class="tiny muted">${(f.permissions?.[act]||[]).length?'':'Everyone allowed'}</div></div>`).join('')}
+  </div>
+  <div class="card pad" style="margin-top:12px">
+    <div class="row wrap"><button class="btn" data-action="saveTemplate" data-id="${f.id}">📚 Save as template</button>
+      <button class="btn bad ghost" data-action="deleteForm" data-id="${f.id}">Delete form</button></div>
+  </div></div>`;
+}
+
+/* ---------- Templates ---------- */
+async function renderTemplates(c){
+  let tpls=(await Store.list('forms')).filter(f=>f.isTemplate);
+  c.innerHTML=`<div class="small muted" style="margin-bottom:12px">Start from a ready-made form. “Use” creates an editable copy in your Form Builder.</div>
+    <div class="grid cols">${tpls.map(t=>`<div class="card formcard"><div class="bar" style="background:${t.color}"></div>
+      <div class="body"><div class="row"><div class="icon" style="background:${t.color}">${t.icon}</div><span class="sp"></span><span class="chip">📚 Template</span></div>
+      <h3>${esc(t.name)}</h3><div class="small muted">${esc(t.description||'')}</div>
+      <div class="meta"><span class="chip">${(t.fields||[]).length} fields</span><span class="chip">${(t.workflow?.steps||[]).length} steps</span></div>
+      <div class="row" style="margin-top:12px"><button class="btn sm primary" data-action="useTemplate" data-id="${t.id}">Use template</button>
+        <button class="btn sm" data-action="dupTemplatePreview" data-id="${t.id}">Preview</button></div></div></div>`).join('')}</div>`;
+}
+
+/* ---------- Settings / Directory ---------- */
+async function renderSettings(c){
+  const sec=(title,coll,rows,extra)=>`<div class="sectitle">${title}</div><div class="card pad">
+    ${rows.map(r=>`<div class="row" style="margin-bottom:7px"><span class="chip">${extra?extra(r):''}${esc(r.name)}</span>
+      <span class="sp"></span><button class="btn sm ghost" data-action="delDir" data-coll="${coll}" data-id="${r.id}">✕</button></div>`).join('')||'<div class="muted small">None.</div>'}
+    <div class="row" style="margin-top:8px"><input class="inp" id="new_${coll}" placeholder="Add ${title.toLowerCase()}…">
+      <button class="btn sm primary" data-action="addDir" data-coll="${coll}">Add</button></div></div>`;
+  c.innerHTML=`
+    <div class="sectitle">People / Directory</div><div class="card pad">
+      ${DIR.people.map(p=>`<div class="row" style="margin-bottom:7px"><span class="icon" style="width:30px;height:30px;font-size:13px;border-radius:8px;background:${p.color}">${esc(p.name[0])}</span>
+        <div><div style="font-weight:700;font-size:13.5px">${esc(p.name)}</div><div class="tiny muted">${esc(p.role)} · ${esc(p.department)}</div></div>
+        <span class="sp"></span><button class="btn sm ghost" data-action="delDir" data-coll="people" data-id="${p.id}">✕</button></div>`).join('')}
+      <div class="f2" style="margin-top:8px"><input class="inp" id="np_name" placeholder="Full name">
+        <select class="inp" id="np_role">${DIR.roles.map(r=>`<option>${esc(r.name)}</option>`).join('')}</select>
+        <select class="inp" id="np_dept">${DIR.departments.map(d=>`<option>${esc(d.name)}</option>`).join('')}</select>
+        <button class="btn primary" data-action="addPerson">＋ Add person</button></div>
+    </div>
+    ${sec('Roles','roles',DIR.roles)}
+    ${sec('Departments','departments',DIR.departments)}
+    ${sec('Modules','modules',DIR.modules)}
+    ${sec('Projects','projects',DIR.projects)}
+    <div class="sectitle">Data</div><div class="card pad row wrap">
+      <button class="btn" data-action="exportData">⬇ Export all data (JSON)</button>
+      <button class="btn bad ghost" data-action="resetAll">Reset everything</button>
+    </div>`;
+}
+
+/* ---------- Form submission (renderer) ---------- */
+let SUBMIT_STATE=null;
+async function useForm(id){
+  const f=await Store.get('forms',id);if(!f)return;
+  if(!Permission.can(f,'submit'))return toast('Your role cannot submit this form','bad');
+  const values={};(f.fields||[]).forEach(fl=>{if(!FieldTypes[fl.type]?.layout)values[fieldKey(fl)]=clone(FieldTypes[fl.type].value);});
+  SUBMIT_STATE={form:f,values,errors:{}};
+  await drawSubmitModal();
+}
+async function drawSubmitModal(){
+  const {form,values,errors}=SUBMIT_STATE;
+  const fieldsHtml=[];
+  for(const fl of (form.fields||[])){
+    if(fl.type==='hidden')continue;
+    fieldsHtml.push(await renderSubmitField(fl,values,errors));
+  }
+  const body=`<div class="row" style="margin-bottom:12px"><div class="icon" style="width:40px;height:40px;background:${form.color};border-radius:11px;display:grid;place-items:center;font-size:20px;color:#fff">${form.icon}</div>
+    <div><div style="font-weight:800">${esc(form.name)}</div><div class="small muted">${esc(form.description||'')}</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">${fieldsHtml.join('')}</div>`;
+  const footer=`<button class="btn ghost" data-action="closeModal">Cancel</button>
+    <button class="btn primary" data-action="doSubmit">Submit request</button>`;
+  modal({title:'New Request',body,footer,wide:true});
+  wireSubmitInputs();
+}
+async function renderSubmitField(fl,values,errors){
+  const d=FieldTypes[fl.type];const key=fieldKey(fl);const err=errors[fl.id];
+  const wide=fl.width!=='half';
+  if(d.layout){const inner=fl.type==='divider'?'<hr style="border:0;border-top:1px solid var(--stroke);margin:6px 0">'
+    :fl.type==='heading'?`<h3 style="margin:10px 0 2px;font-size:16px">${esc(fl.label)}</h3>`
+    :`<div class="small muted" style="margin-bottom:8px">${esc(fl.label)}</div>`;
+    return `<div class="full">${inner}</div>`;}
+  const input=await previewInput(fl,values[key],false);
+  return `<div class="field ${wide?'full':'half'}"><label>${esc(fl.label)}${fl.required?' <span class="req">*</span>':''}</label>
+    ${fl.help?`<div class="help">${esc(fl.help)}</div>`:''}${input}
+    ${err?`<div class="errmsg" data-err="${fl.id}">${err}</div>`:''}</div>`;
+}
+
+/* input renderer used by BOTH preview (builder) and live submit */
+function previewInput(fl,val,preview){
+  const d=FieldTypes[fl.type];const key=fieldKey(fl);
+  const bind=preview?'':`data-bind="${key}" data-ftype="${fl.type}" data-fid="${fl.id}"`;
+  const dis=preview?'disabled':'';
+  switch(fl.type){
+    case'text':case'email':case'phone':
+      return `<input class="inp" type="${fl.type==='email'?'email':'text'}" ${bind} ${dis} value="${esc(val||'')}" placeholder="${esc(fl.help||'')}">`;
+    case'number':return `<input class="inp" type="number" ${bind} ${dis} value="${esc(val||'')}">`;
+    case'currency':return `<div class="row" style="position:relative"><span style="position:absolute;left:11px;font-weight:700;color:var(--muted)">₱</span><input class="inp" style="padding-left:26px" type="number" ${bind} ${dis} value="${esc(val||'')}"></div>`;
+    case'paragraph':return `<textarea class="inp" ${bind} ${dis}>${esc(val||'')}</textarea>`;
+    case'date':return `<input class="inp" type="date" ${bind} ${dis} value="${esc(val||'')}">`;
+    case'time':return `<input class="inp" type="time" ${bind} ${dis} value="${esc(val||'')}">`;
+    case'dropdown':case'lookup':case'people':case'project':case'department':case'role':{
+      let opts=fl.options||[];
+      if(['people','project','department','role'].includes(fl.type)){const src=DIR[d.source]||[];opts=src.map(x=>({label:x.name+(x.role?' · '+x.role:''),value:x.id}));}
+      if(fl.type==='lookup'){const src=DIR[fl.source]||[];opts=src.map(x=>({label:x.name,value:x.id}));}
+      return `<select class="inp" ${bind} ${dis}><option value="">— select —</option>${opts.map(o=>`<option value="${esc(o.value)}" ${val==o.value?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`;}
+    case'yesno':return `<div class="toggle" ${dis}>${(fl.options||[{label:'Yes',value:'Yes'},{label:'No',value:'No'}]).map(o=>`<button type="button" class="${val==o.value?'on':''}" ${preview?'disabled':`data-choice="${key}" data-ftype="yesno" data-fid="${fl.id}" data-v="${esc(o.value)}"`}>${esc(o.label)}</button>`).join('')}</div>`;
+    case'radio':return (fl.options||[]).map(o=>`<label class="checkline"><input type="radio" name="${fl.id}" ${preview?'disabled':`data-choice="${key}" data-ftype="radio" data-fid="${fl.id}" data-v="${esc(o.value)}"`} ${val==o.value?'checked':''}>${esc(o.label)}</label>`).join('');
+    case'checkbox':return `<label class="checkline"><input type="checkbox" ${bind} ${dis} ${val?'checked':''}> ${esc(fl.help||'Yes')}</label>`;
+    case'multiselect':return (fl.options||[]).map(o=>`<label class="checkline"><input type="checkbox" ${preview?'disabled':`data-multi="${key}" data-fid="${fl.id}" data-v="${esc(o.value)}"`} ${(Array.isArray(val)&&val.includes(o.value))?'checked':''}>${esc(o.label)}</label>`).join('');
+    case'rating':return `<div class="stars" ${preview?'':`data-rating="${key}" data-fid="${fl.id}"`}>${[1,2,3,4,5].map(n=>`<span class="${(+val>=n)?'on':''}" ${preview?'':`data-n="${n}"`}>★</span>`).join('')}</div>`;
+    case'signature':return val&&preview?'<span class="muted small">✍️ signature</span>'
+      :`<canvas class="sig" ${preview?'':`data-sig="${key}" data-fid="${fl.id}"`} width="600" height="150"></canvas>${preview?'':`<button type="button" class="btn sm ghost" data-action="clearSig" data-fid="${fl.id}" style="margin-top:6px">Clear</button>`}`;
+    case'location':return `<div class="row"><input class="inp" ${bind} ${dis} value="${esc(val||'')}" placeholder="lat, lng or address"><button type="button" class="btn sm" ${preview?'disabled':`data-action="geoloc" data-key="${key}" data-fid="${fl.id}"`}>📍</button></div>`;
+    case'qrcode':case'barcode':{const v=val||'';return `<input class="inp mono" ${bind} ${dis} value="${esc(v)}" placeholder="scan / enter code">
+      ${v?`<div style="margin-top:8px">${fl.type==='barcode'?barcodeVis(v):`<div class="code-vis">${esc(v)}</div>`}</div>`:''}`;}
+    case'image':return `${val?`<img src="${val}" style="max-height:110px;border-radius:8px;display:block;margin-bottom:6px">`:''}<input class="inp" type="file" accept="image/*" ${preview?'disabled':`data-upload="${key}" data-fid="${fl.id}" data-img="1"`}>`;
+    case'file':return `${val?`<div class="chip">📎 file attached</div>`:''}<input class="inp" type="file" ${preview?'disabled':`data-upload="${key}" data-fid="${fl.id}"`}>`;
+    case'repeating':return repeatInput(fl,val,preview);
+    case'formula':case'calculated':{const r=FormEngine.evalExpression(fl.expression,SUBMIT_STATE?SUBMIT_STATE.values:{},fl.__form||SUBMIT_STATE?.form||{fields:[]});
+      return `<div class="inp mono" ${preview?'':`data-calc="${key}" data-fid="${fl.id}"`} style="background:var(--glass2);font-weight:700">${preview?'= computed':r}</div>`;}
+    default:return `<input class="inp" ${bind} ${dis} value="${esc(val||'')}">`;
+  }
+}
+function repeatInput(fl,val,preview){
+  const rows=Array.isArray(val)?val:[];
+  return `<div data-repeat="${fieldKey(fl)}" data-fid="${fl.id}"><table class="rt-table"><thead><tr>${fl.columns.map(c=>`<th>${esc(c.label)}</th>`).join('')}<th></th></tr></thead>
+    <tbody>${rows.map((row,ri)=>`<tr>${fl.columns.map(c=>`<td><input class="inp" style="padding:5px 7px;border:0;background:transparent" ${preview?'disabled':`data-rrow="${ri}" data-rcol="${c.key}"`} value="${esc(row[c.key]||'')}"></td>`).join('')}
+      <td>${preview?'':`<button type="button" class="btn sm ghost" data-action="delRow" data-fid="${fl.id}" data-ri="${ri}">✕</button>`}</td></tr>`).join('')}</tbody></table>
+    ${preview?'':`<button type="button" class="btn sm" data-action="addRow" data-fid="${fl.id}" style="margin-top:6px">＋ Add row</button>`}</div>`;
+}
+function barcodeVis(v){ // deterministic Code128-ish visual (representational)
+  let bars='';for(let i=0;i<v.length;i++){const code=v.charCodeAt(i);for(let b=0;b<4;b++){
+    const w=((code>>b)&1)?3:1;const black=(b%2===0);bars+=`<i style="width:${w}px;background:${black?'#111':'transparent'}"></i>`;}}
+  return `<div class="barcode">${bars}</div><div class="mono tiny" style="text-align:center;letter-spacing:2px">${esc(v)}</div>`;
+}
+
+/* wiring for live submit inputs (delegation on modal) */
+function wireSubmitInputs(){
+  const root=$('#modalRoot');
+  root.addEventListener('input',onSubmitInput);
+  root.addEventListener('change',onSubmitInput);
+  // signature pads
+  $$('canvas[data-sig]',root).forEach(setupSignature);
+}
+function onSubmitInput(e){
+  const t=e.target;const S=SUBMIT_STATE;if(!S)return;
+  if(t.dataset.bind!=null){let v=t.type==='checkbox'?t.checked:t.value;S.values[t.dataset.bind]=v;recalc();}
+  else if(t.dataset.multi!=null){const key=t.dataset.multi;const arr=Array.isArray(S.values[key])?S.values[key]:[];
+    const val=t.dataset.v;if(t.checked){if(!arr.includes(val))arr.push(val);}else{const i=arr.indexOf(val);if(i>=0)arr.splice(i,1);}S.values[key]=arr;}
+  else if(t.dataset.rrow!=null){const wrap=t.closest('[data-repeat]');const key=wrap.dataset.repeat;
+    const arr=Array.isArray(S.values[key])?S.values[key]:[];const ri=+t.dataset.rrow;arr[ri]=arr[ri]||{};arr[ri][t.dataset.rcol]=t.value;S.values[key]=arr;}
+  else if(t.dataset.upload!=null){const file=t.files[0];if(file){const rd=new FileReader();rd.onload=()=>{S.values[t.dataset.upload]=rd.result;drawSubmitModal();};rd.readAsDataURL(file);}}
+}
+function recalc(){const S=SUBMIT_STATE;if(!S)return;
+  $$('[data-calc]',$('#modalRoot')).forEach(el=>{const fl=S.form.fields.find(f=>f.id===el.dataset.fid);
+    if(fl){S.values[el.dataset.calc]=FormEngine.evalExpression(fl.expression,S.values,S.form);el.textContent=S.values[el.dataset.calc];}});}
+function setupSignature(cv){const ctx=cv.getContext('2d');ctx.lineWidth=2;ctx.lineCap='round';ctx.strokeStyle='#111';
+  let drawing=false,last=null;const pos=e=>{const r=cv.getBoundingClientRect();const p=(e.touches?e.touches[0]:e);
+    return{x:(p.clientX-r.left)*(cv.width/r.width),y:(p.clientY-r.top)*(cv.height/r.height)};};
+  const start=e=>{drawing=true;last=pos(e);e.preventDefault();};
+  const move=e=>{if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;
+    SUBMIT_STATE.values[cv.dataset.sig]=cv.toDataURL();e.preventDefault();};
+  const end=()=>{drawing=false;};
+  cv.addEventListener('pointerdown',start);cv.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',end);
+}
+
+/* ---------- pointer-based sortable (touch friendly) ---------- */
+function makeSortable(list,onReorder){
+  let dragEl=null,startIdx=0;
+  $$('[data-handle]',list).forEach(h=>{
+    h.addEventListener('pointerdown',e=>{
+      dragEl=h.closest('[data-idx]');if(!dragEl)return;startIdx=+dragEl.dataset.idx;
+      dragEl.classList.add('dragging');dragEl.setPointerCapture?.(e.pointerId);e.preventDefault();
+      const move=ev=>{const items=$$('[data-idx]',list).filter(x=>x!==dragEl);
+        let placed=false;for(const it of items){const r=it.getBoundingClientRect();
+          if(ev.clientY<r.top+r.height/2){list.insertBefore(dragEl,it);placed=true;break;}}
+        if(!placed)list.appendChild(dragEl);};
+      const up=()=>{dragEl.classList.remove('dragging');
+        const order=$$('[data-idx]',list).map(x=>+x.dataset.idx);const to=order.indexOf(startIdx);
+        document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);
+        if(to!==startIdx&&to>=0)onReorder(startIdx,to);dragEl=null;};
+      document.addEventListener('pointermove',move);document.addEventListener('pointerup',up);
+    });
+  });
+}
+
+/* ============================================================================
+   10 · ACTION ROUTER  (event delegation)
+   ========================================================================== */
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-action]');if(!el)return;
+  const a=el.dataset.action, id=el.dataset.id;
+  const F=async()=>APP.editing?await Store.get('forms',APP.editing):null;
+  switch(a){
+    case'go':APP.view=el.dataset.view;APP.editing=null;APP.navOpen=false;$('#side').classList.remove('open');$('#scrim').classList.remove('open');render();break;
+    case'openNav':$('#side').classList.add('open');$('#scrim').classList.add('open');break;
+    case'closeNav':$('#side').classList.remove('open');$('#scrim').classList.remove('open');break;
+    case'switchUser':break;
+    case'closeModal':closeModal();break;
+    case'closeModalBg':if(e.target.classList.contains('overlay'))closeModal();break;
+    case'notifs':await showNotifs();break;
+
+    /* forms */
+    case'newForm':await newForm();break;
+    case'editForm':APP.editing=id;APP.builderTab='fields';BUILDER_SEL=null;render();break;
+    case'closeBuilder':APP.editing=null;render();break;
+    case'btab':APP.builderTab=el.dataset.t;render();break;
+    case'useForm':await useForm(id);break;
+    case'dupForm':{const f=await Store.get('forms',id);const c=clone(f);c.id=uid('form');c.name=f.name+' (copy)';c.status='draft';c.isTemplate=false;delete c.createdAt;await Store.upsert('forms',c);toast('Form duplicated','ok');render();break;}
+    case'deleteForm':if(confirm('Delete this form? Existing requests are kept.')){await Store.remove('forms',id);APP.editing=null;toast('Form deleted');render();}break;
+    case'formMore':await formMore(id);break;
+    case'setStatus':{const f=await F();f.status=el.dataset.s;if(f.status==='published'&&!(f.fields||[]).length){toast('Add at least one field first','warn');f.status='draft';}await Store.upsert('forms',f);toast('Status: '+f.status,'ok');render();break;}
+    case'saveTemplate':{const f=await Store.get('forms',id);const c=clone(f);c.id=uid('form');c.isTemplate=true;c.status='published';delete c.createdAt;await Store.upsert('forms',c);toast('Saved as template','ok');break;}
+
+    /* builder fields */
+    case'addField':{const f=await F();const nf=makeField(el.dataset.t);f.fields=f.fields||[];f.fields.push(nf);BUILDER_SEL=nf.id;await Store.upsert('forms',f);renderBuilderFields(f);break;}
+    case'selField':{if(e.target.closest('.acts')||e.target.closest('[data-handle]'))break;BUILDER_SEL=el.dataset.fid;const f=await F();renderBuilderFields(f);break;}
+    case'dupField':{const f=await F();const idx=f.fields.findIndex(x=>x.id===el.dataset.fid);const c=clone(f.fields[idx]);c.id=uid('f');c.key='';f.fields.splice(idx+1,0,c);await Store.upsert('forms',f);renderBuilderFields(f);break;}
+    case'delField':{const f=await F();f.fields=f.fields.filter(x=>x.id!==el.dataset.fid);if(BUILDER_SEL===el.dataset.fid)BUILDER_SEL=null;await Store.upsert('forms',f);renderBuilderFields(f);break;}
+    case'addOpt':{const f=await F();const fl=f.fields.find(x=>x.id===BUILDER_SEL);fl.options.push({label:'Option '+(fl.options.length+1),value:'Option '+(fl.options.length+1)});await Store.upsert('forms',f);renderBuilderFields(f);break;}
+    case'delOpt':{const f=await F();const fl=f.fields.find(x=>x.id===BUILDER_SEL);fl.options.splice(+el.dataset.i,1);await Store.upsert('forms',f);renderBuilderFields(f);break;}
+    case'addCol':{const f=await F();const fl=f.fields.find(x=>x.id===BUILDER_SEL);fl.columns.push({key:'c'+(fl.columns.length+1),label:'Column '+(fl.columns.length+1),type:'text'});await Store.upsert('forms',f);renderBuilderFields(f);break;}
+    case'delCol':{const f=await F();const fl=f.fields.find(x=>x.id===BUILDER_SEL);fl.columns.splice(+el.dataset.i,1);await Store.upsert('forms',f);renderBuilderFields(f);break;}
+
+    /* builder settings */
+    case'setIcon':{const f=await F();f.icon=el.dataset.v;await Store.upsert('forms',f);renderBuilderSettings(f);break;}
+    case'setColor':{const f=await F();f.color=el.dataset.v;await Store.upsert('forms',f);renderBuilderSettings(f);break;}
+    case'togglePerm':{const f=await F();const act=el.dataset.act,r=el.dataset.r;f.permissions=f.permissions||{};const arr=f.permissions[act]||[];
+      const i=arr.indexOf(r);if(i>=0)arr.splice(i,1);else arr.push(r);f.permissions[act]=arr;await Store.upsert('forms',f);renderBuilderSettings(f);break;}
+
+    /* workflow */
+    case'addStep':{const f=await F();f.workflow.steps.push({id:uid('s'),name:'New step',approverType:'role',role:DIR.roles[0].id,mode:'sequential',condition:null,slaHours:24});await Store.upsert('forms',f);renderBuilderWorkflow(f);break;}
+    case'delStep':{const f=await F();f.workflow.steps=f.workflow.steps.filter(s=>s.id!==id);await Store.upsert('forms',f);renderBuilderWorkflow(f);break;}
+    case'moveStep':{const f=await F();const arr=f.workflow.steps;const i=arr.findIndex(s=>s.id===id);const j=i+(+el.dataset.dir);
+      if(j>=0&&j<arr.length){[arr[i],arr[j]]=[arr[j],arr[i]];await Store.upsert('forms',f);renderBuilderWorkflow(f);}break;}
+    case'toggleCond':{const f=await F();const s=f.workflow.steps.find(x=>x.id===id);s.condition=s.condition?null:{field:'',op:'gt',value:''};await Store.upsert('forms',f);renderBuilderWorkflow(f);break;}
+
+    /* templates */
+    case'useTemplate':{const t=await Store.get('forms',id);const c=clone(t);c.id=uid('form');c.isTemplate=false;c.status='draft';c.name=t.name;delete c.createdAt;await Store.upsert('forms',c);APP.view='forms';APP.editing=c.id;APP.builderTab='fields';toast('Template copied to Form Builder','ok');render();break;}
+    case'dupTemplatePreview':{const t=await Store.get('forms',id);SUBMIT_STATE={form:t,values:{},errors:{}};await drawSubmitModal();break;}
+
+    /* submit */
+    case'doSubmit':await doSubmit();break;
+    case'geoloc':{const key=el.dataset.key;if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{SUBMIT_STATE.values[key]=p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5);drawSubmitModal();},()=>toast('Location unavailable','warn'));break;}
+    case'clearSig':{const cv=$(`canvas[data-fid="${el.dataset.fid}"]`);if(cv){cv.getContext('2d').clearRect(0,0,cv.width,cv.height);SUBMIT_STATE.values[cv.dataset.sig]='';}break;}
+    case'addRow':{const S=SUBMIT_STATE;const fl=S.form.fields.find(x=>x.id===el.dataset.fid);const key=fieldKey(fl);S.values[key]=Array.isArray(S.values[key])?S.values[key]:[];S.values[key].push({});drawSubmitModal();break;}
+    case'delRow':{const S=SUBMIT_STATE;const fl=S.form.fields.find(x=>x.id===el.dataset.fid);const key=fieldKey(fl);S.values[key].splice(+el.dataset.ri,1);drawSubmitModal();break;}
+
+    /* requests */
+    case'openReq':await openReq(id);break;
+    case'reqFilter':APP.reqFilter=el.dataset.f;render();break;
+    case'reqAct':await reqAct(id,el.dataset.act);break;
+    case'reqMore':await reqMore(id);break;
+    case'doReqAct':await doReqAct(el.dataset.id,el.dataset.act);break;
+
+    /* settings */
+    case'addDir':{const coll=el.dataset.coll;const inp=$('#new_'+coll);const name=(inp.value||'').trim();if(!name)break;
+      await Store.upsert(coll,{id:uid(coll),name});await loadDir();render();break;}
+    case'delDir':{await Store.remove(el.dataset.coll,id);await loadDir();render();break;}
+    case'addPerson':{const name=$('#np_name').value.trim();if(!name)break;
+      await Store.upsert('people',{id:uid('u'),name,role:$('#np_role').value,department:$('#np_dept').value,color:COLOR_CHOICES[Math.floor(Math.random()*COLOR_CHOICES.length)]});
+      await loadDir();render();break;}
+    case'exportData':{const raw=await Store.raw();const blob=new Blob([JSON.stringify(raw,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='approval-center-data.json';link.click();break;}
+    case'resetAll':if(confirm('Erase ALL forms, requests and data on this device?')){localStorage.removeItem('ace_v1');location.reload();}break;
+  }
+});
+/* selects / text inputs via change+input delegation (builder props & workflow) */
+document.addEventListener('change',onGlobalInput);
+document.addEventListener('input',onGlobalInput);
+async function onGlobalInput(e){
+  const t=e.target;
+  if(t.dataset&&t.dataset.action==='switchUser'){APP.user=DIR.people.find(p=>p.id===t.value);render();return;}
+  if(!APP.editing)return;
+  const f=await Store.get('forms',APP.editing);if(!f)return;
+  // field property
+  if(t.dataset.prop!=null){let v=t.type==='checkbox'?t.checked:t.value;
+    if(BUILDER_SEL&&APP.builderTab==='fields'){const fl=f.fields.find(x=>x.id===BUILDER_SEL);if(fl){setPath(fl,t.dataset.prop,v);await Store.upsert('forms',f);
+      // live update the row label/preview without losing focus
+      const row=$(`.fitem[data-fid="${fl.id}"] .t`);if(row&&t.dataset.prop==='label')row.innerHTML=esc(v)+(fl.required?' <span class="req">*</span>':'');
+      if(['required','width','key'].includes(t.dataset.prop)){/*structural-ish, defer*/}
+    }}
+    else{setPath(f,t.dataset.prop,v);await Store.upsert('forms',f);
+      if(t.dataset.prop==='name'){/*don't rerender to keep focus*/}}
+    return;}
+  // option label edit
+  if(t.dataset.opt!=null&&BUILDER_SEL){const fl=f.fields.find(x=>x.id===BUILDER_SEL);const i=+t.dataset.opt;fl.options[i]={label:t.value,value:t.value};await Store.upsert('forms',f);return;}
+  if(t.dataset.col!=null&&BUILDER_SEL){const fl=f.fields.find(x=>x.id===BUILDER_SEL);const i=+t.dataset.col;fl.columns[i].label=t.value;fl.columns[i].key=t.value.toLowerCase().replace(/\s+/g,'_')||('c'+i);await Store.upsert('forms',f);return;}
+  // workflow step props
+  if(t.dataset.step!=null){const s=f.workflow.steps.find(x=>x.id===t.dataset.step);if(!s)return;
+    if(t.dataset.sp!=null){s[t.dataset.sp]=t.value;if(t.dataset.sp==='approverType'){await Store.upsert('forms',f);renderBuilderWorkflow(f);return;}}
+    if(t.dataset.cond!=null){s.condition=s.condition||{field:'',op:'gt',value:''};s.condition[t.dataset.cond]=t.value;}
+    await Store.upsert('forms',f);return;}
+}
+
+/* ---------- submit / validation ---------- */
+async function doSubmit(){
+  const {form,values}=SUBMIT_STATE;
+  const errors=Validation.form(form,values);
+  SUBMIT_STATE.errors=errors;
+  if(Object.keys(errors).length){await drawSubmitModal();toast('Please fix highlighted fields','bad');return;}
+  const req=await Approval.submit(form,values);
+  closeModal();toast('Request submitted for approval','ok');
+  APP.view='requests';render();
+}
+
+/* ---------- request actions ---------- */
+async function reqAct(id,act){
+  const needsText=['reject','return','revision','comment','escalate'].includes(act);
+  const needsPick=['delegate','forward'].includes(act);
+  if(!needsText&&!needsPick){await doReqAct(id,act);return;}
+  const body=needsPick?`<div class="field"><label>Send to</label><select class="inp" id="actPick">${DIR.people.map(p=>`<option value="${p.id}">${esc(p.name)} (${esc(p.role)})</option>`).join('')}</select></div>`
+    :`<div class="field"><label>Remarks${act==='reject'?'':' (optional)'}</label><textarea class="inp" id="actText" placeholder="Add a note…"></textarea></div>`;
+  modal({title:act[0].toUpperCase()+act.slice(1),body,
+    footer:`<button class="btn ghost" data-action="closeModal">Cancel</button>
+      <button class="btn ${act==='reject'?'bad':act==='approve'?'ok':'primary'}" data-action="doReqAct" data-id="${id}" data-act="${act}">Confirm ${act}</button>`});
+}
+async function doReqAct(id,act){
+  const r=await Store.get('requests',id);if(!r)return;
+  let remarks='';
+  const pick=$('#actPick'),txt=$('#actText');
+  if(pick)remarks=pick.value;else if(txt)remarks=txt.value.trim();
+  if(act==='reject'&&!remarks){toast('A reason is required to reject','warn');return;}
+  await Approval.act(r,act,remarks);
+  closeModal();toast(`Request ${act}ed`.replace('approveed','approved').replace('canceled','cancelled'),act==='reject'?'bad':'ok');
+  render();
+}
+async function reqMore(id){
+  const acts=[['comment','💬 Comment'],['delegate','↪️ Delegate'],['forward','➡️ Forward'],['escalate','⬆️ Escalate'],['revision','✏️ Request revision']];
+  modal({title:'More actions',body:`<div class="grid" style="grid-template-columns:1fr 1fr">
+    ${acts.map(([a,l])=>`<button class="btn block" data-action="reqAct" data-id="${id}" data-act="${a}">${l}</button>`).join('')}</div>`});
+}
+async function formMore(id){
+  const f=await Store.get('forms',id);
+  modal({title:f.name,body:`<div class="grid" style="grid-template-columns:1fr 1fr">
+    <button class="btn block" data-action="editForm" data-id="${id}">✏️ Edit</button>
+    <button class="btn block" data-action="dupForm" data-id="${id}">⧉ Duplicate</button>
+    <button class="btn block" data-action="saveTemplate" data-id="${id}">📚 Save as template</button>
+    <button class="btn block ${f.status==='archived'?'':'ghost'}" data-action="archiveForm" data-id="${id}">🗄 ${f.status==='archived'?'Unarchive':'Archive'}</button>
+    <button class="btn block bad" data-action="deleteForm" data-id="${id}">🗑 Delete</button></div>`});
+}
+document.addEventListener('click',async e=>{const el=e.target.closest('[data-action="archiveForm"]');if(!el)return;
+  const f=await Store.get('forms',el.dataset.id);f.status=f.status==='archived'?'draft':'archived';await Store.upsert('forms',f);closeModal();render();});
+
+async function showNotifs(){
+  const list=await Notify.mine();await Notify.markAll();
+  modal({title:'Notifications',body:list.length?`<div class="tl">${list.map(n=>`<div class="ev ${n.read?'':'info'}"><div class="mk">🔔</div>
+    <div class="t">${esc(n.text)}</div><div class="m">${ago(n.at)}</div>
+    ${n.requestId?`<button class="btn sm" data-action="openReq" data-id="${n.requestId}" style="margin-top:6px">Open request</button>`:''}</div>`).join('')}</div>`
+    :emptyCard('🔕','No notifications','You are all caught up.')});
+  render();
+}
+
+/* ============================================================================
+   11 · SEEDING + BOOT
+   ========================================================================== */
+async function loadDir(){
+  DIR.people=await Store.list('people');DIR.roles=await Store.list('roles');
+  DIR.departments=await Store.list('departments');DIR.modules=await Store.list('modules');
+  DIR.projects=await Store.list('projects');
+}
+function tpl(name,desc,icon,color,module,fields,steps){
+  return {id:uid('form'),name,description:desc,icon,color,department:module,module,category:'Template',version:1,
+    status:'published',isTemplate:true,fields:fields.map(f=>({...makeField(f.type),...f,id:uid('f')})),
+    workflow:{steps:steps.map(s=>({id:uid('s'),mode:'sequential',condition:null,slaHours:24,approverType:'role',...s}))},
+    permissions:{submit:[],approve:[],edit:[],delete:[],archive:[]}};
+}
+async function seedIfEmpty(){
+  const raw=await Store.raw();
+  if(!raw.people){for(const c in SEED)await Store.bulk(c,SEED[c]);}
+  const forms=await Store.list('forms');
+  if(!forms.some(f=>f.isTemplate)){
+    const templates=[
+      tpl('Petty Cash Request','Request petty cash for site expenses','💵','#059669','Finance',
+        [{type:'text',key:'purpose',label:'Purpose',required:true},
+         {type:'currency',key:'amount',label:'Amount',required:true},
+         {type:'project',key:'project',label:'Project',required:true},
+         {type:'date',key:'needed',label:'Date needed'},
+         {type:'paragraph',key:'notes',label:'Justification'}],
+        [{name:'Supervisor',role:'Supervisor'},{name:'Finance',role:'Finance'},
+         {name:'CEO (large amounts)',role:'CEO',condition:{field:'amount',op:'gt',value:'50000'}}]),
+      tpl('Purchase Request','Procure materials or services','🛒','#0284c7','Procurement',
+        [{type:'text',key:'item',label:'Item / service',required:true},
+         {type:'number',key:'qty',label:'Quantity',required:true,width:'half'},
+         {type:'currency',key:'unit_price',label:'Unit price',required:true,width:'half'},
+         {type:'formula',key:'total',label:'Estimated total',expression:'{qty} * {unit_price}'},
+         {type:'project',key:'project',label:'Project'},
+         {type:'department',key:'dept',label:'Requesting dept'}],
+        [{name:'Supervisor',role:'Supervisor'},{name:'Procurement',role:'Procurement'},
+         {name:'Construction Head',role:'Construction Head'},
+         {name:'CEO (> ₱100k)',role:'CEO',condition:{field:'total',op:'gt',value:'100000'}}]),
+      tpl('Leave Request','Apply for leave','🏖️','#7c3aed','HR',
+        [{type:'dropdown',key:'leave_type',label:'Leave type',required:true,options:[{label:'Vacation',value:'Vacation'},{label:'Sick',value:'Sick'},{label:'Emergency',value:'Emergency'}]},
+         {type:'date',key:'from',label:'From',required:true,width:'half'},
+         {type:'date',key:'to',label:'To',required:true,width:'half'},
+         {type:'paragraph',key:'reason',label:'Reason'}],
+        [{name:'Supervisor',role:'Supervisor'},{name:'HR',role:'HR'}]),
+      tpl('Material Request','Request materials for delivery to site','🧱','#d97706','Construction',
+        [{type:'project',key:'project',label:'Project',required:true},
+         {type:'repeating',key:'items',label:'Materials',columns:[{key:'material',label:'Material',type:'text'},{key:'qty',label:'Qty',type:'number'},{key:'unit',label:'Unit',type:'text'}]},
+         {type:'date',key:'needed',label:'Needed by'},
+         {type:'radio',key:'priority',label:'Priority',options:[{label:'Normal',value:'Normal'},{label:'Urgent',value:'Urgent'}]}],
+        [{name:'Supervisor',role:'Supervisor'},{name:'Construction Head',role:'Construction Head'},{name:'Procurement',role:'Procurement'}]),
+      tpl('Site Inspection / QAQC','Quality inspection checklist','🔬','#0d9488','QAQC',
+        [{type:'project',key:'project',label:'Project',required:true},
+         {type:'heading',label:'Checklist'},
+         {type:'yesno',key:'formworks_ok',label:'Formworks aligned & braced'},
+         {type:'yesno',key:'rebar_ok',label:'Rebar size & spacing correct'},
+         {type:'rating',key:'workmanship',label:'Workmanship rating'},
+         {type:'image',key:'photo',label:'Photo evidence'},
+         {type:'signature',key:'inspector_sig',label:'Inspector signature'}],
+        [{name:'QAQC Head',role:'QAQC'},{name:'Construction Head',role:'Construction Head'}]),
+      tpl('Cash Advance','Employee cash advance','🏦','#dc2626','Finance',
+        [{type:'currency',key:'amount',label:'Amount',required:true},
+         {type:'paragraph',key:'purpose',label:'Purpose',required:true},
+         {type:'date',key:'payback',label:'Expected liquidation date'}],
+        [{name:'Supervisor',role:'Supervisor'},{name:'Finance',role:'Finance'},
+         {name:'CEO',role:'CEO',condition:{field:'amount',op:'gt',value:'20000'}}]),
+    ];
+    for(const t of templates)await Store.upsert('forms',t);
+  }
+}
+async function boot(){
+  await seedIfEmpty();
+  await loadDir();
+  APP.user=DIR.people[0];
+  await render();
+}
+boot();
+</script>
+</body>
+</html>
