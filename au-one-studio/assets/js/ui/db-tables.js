@@ -11,6 +11,9 @@
    ========================================================================== */
 let TBL_EDITING=null;   // table id currently open in the schema editor
 let TBL_SEL=null;       // selected column id within that table
+let TBL_TAB='schema';   // active editor tab — Phase 4: gives Tables the same
+                         // Schema/Settings tab split Forms/Objects already have,
+                         // instead of the one untabbed page it had before
 const TBL_ACTIONS={add:'tblAddField',sel:'tblSelField',dup:'tblDupField',del:'tblDelField',
   addOpt:'tblAddOpt',delOpt:'tblDelOpt',addCol:'tblAddCol',delCol:'tblDelCol',toggleVis:'tblToggleVis'};
 
@@ -60,7 +63,7 @@ async function newTable(){
     {...makeField('text'),key:'name',label:'Name',required:true}]});
   APP.view='database';TBL_EDITING=t.id;TBL_SEL=null;History.reset();render();
 }
-async function editTable(id){ APP.view='database';TBL_EDITING=id;TBL_SEL=null;History.reset();render(); }
+async function editTable(id){ APP.view='database';TBL_EDITING=id;TBL_SEL=null;TBL_TAB='schema';History.reset();render(); }
 async function deleteTable(id){
   if(!await confirmModal({title:'Delete table?',message:'All its records will be kept in storage but the table will no longer be browsable.',confirmLabel:'Delete table'}))return;
   await Tables.remove(id);render();
@@ -68,21 +71,48 @@ async function deleteTable(id){
 
 async function renderTableSchema(c){
   const t=await Tables.get(TBL_EDITING);if(!t){TBL_EDITING=null;return render();}
+  const tab=TBL_TAB||'schema';
   c.innerHTML=subEditorHeader({
     breadcrumbParts:[
       {label:'All tables',action:'closeTableSchema'},
       {html:`<div class="field" style="margin:0;max-width:220px"><input class="inp" id="tblNameInput" value="${esc(t.name)}" placeholder="Table name"></div>`},
     ],
-    actions:`<button class="iconbtn" id="undoBtn" data-action="undo" title="Undo (Ctrl+Z)" aria-label="Undo">${svg('corner-up-left',16)}</button>
-      <button class="iconbtn" id="redoBtn" data-action="redo" title="Redo (Ctrl+Y)" aria-label="Redo">${svg('forward',16)}</button>
-      <button class="btn" data-action="openTableRecords" data-id="${t.id}">${svg('table',15)} View records</button>`
-  })+`<div id="schemaBody"></div>
-  <div id="relBody" style="margin-top:20px"></div>`;
+    tabs:[['schema','Schema','shapes'],['settings','Settings','settings']],activeTab:tab,tabAction:'tblTab',
+    actions:(tab==='schema'?`<button class="iconbtn" id="undoBtn" data-action="undo" title="Undo (Ctrl+Z)" aria-label="Undo">${svg('corner-up-left',16)}</button>
+      <button class="iconbtn" id="redoBtn" data-action="redo" title="Redo (Ctrl+Y)" aria-label="Redo">${svg('forward',16)}</button>`:'')
+      +`<button class="btn" data-action="openTableRecords" data-id="${t.id}">${svg('table',15)} View records</button>`
+  })+`<div id="tblBody"></div>`;
   const nameInput=$('#tblNameInput');
   nameInput.addEventListener('change',async()=>{t.name=nameInput.value.trim()||'Untitled Table';await Store.upsert('tables',t);});
+  if(tab==='schema'){await renderTableSchemaTab(t);History._buttons();}
+  else renderTableSettingsBody(t);
+}
+async function renderTableSchemaTab(t){
+  $('#tblBody').innerHTML=`<div id="schemaBody"></div><div id="relBody" style="margin-top:20px"></div>`;
   renderTableSchemaBody(t);
-  History._buttons();
   await renderRelationshipsPanel(t);
+}
+/* Phase 4: gives Tables the same Settings tab Forms/Objects already have —
+   reuses renderSettingsBody() exactly like renderBuilderSettings (form-
+   settings.js) and renderObjectSettingsBody (object-studio.js) do, rather
+   than inventing a fourth copy. No Workflow/Automations tab here: unlike
+   Objects, plain Tables intentionally have no approval workflow of their own
+   (see object-engine.js) — adding an empty tab for a feature that doesn't
+   apply would be the "random popup / inconsistent panel" the brief warns
+   against, not a fix for it. */
+function renderTableSettingsBody(t){
+  renderSettingsBody($('#tblBody'),{
+    identityTopHtml:`
+      <div class="field"><label>Table name</label><input class="inp" data-prop="name" value="${esc(t.name)}"></div>
+      <div class="field"><label>Module</label><select class="inp" data-prop="module">
+        <option value="">—</option>${DIR.modules.map(m=>`<option value="${m.id}" ${t.module===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select></div>`,
+    icon:{value:t.icon,action:'tblSetIcon'},
+    color:{value:t.color,action:'tblSetColor'},
+    permissions:{actions:['create','read','update','delete'],toggleAction:'tblTogglePerm',
+      note:'Which roles may perform each action. Empty = everyone.',
+      current:act=>t.permissions?.[act]||[]},
+    dangerHtml:`<button class="btn bad ghost" data-action="deleteTable" data-id="${t.id}">${svg('trash-2',15)} Delete table</button>`
+  });
 }
 async function renderRelationshipsPanel(t){
   const rels=t.relationships||[];
@@ -154,6 +184,13 @@ async function onTableSchemaInput(e){
     const fl=table.columns.find(x=>x.id===TBL_SEL);if(!fl)return;
     setPath(fl,t.dataset.prop,v);await Store.upsert('tables',table);
     const row=$(`.fitem[data-fid="${fl.id}"] .t`);if(row&&t.dataset.prop==='label')row.innerHTML=esc(v)+(fl.required?' <span class="req">*</span>':'');
+    return;
+  }
+  if(t.dataset.prop!=null&&!TBL_SEL){
+    /* Settings tab — table-level metadata, mirrors onObjectBuilderInput's
+       identical else-branch for Object Studio's Settings tab */
+    const v=t.type==='checkbox'?t.checked:t.value;
+    setPath(table,t.dataset.prop,v);await Store.upsert('tables',table);
     return;
   }
   if(t.dataset.opt!=null&&TBL_SEL){const fl=table.columns.find(x=>x.id===TBL_SEL);const i=+t.dataset.opt;fl.options[i]={label:t.value,value:t.value};await Store.upsert('tables',table);return;}

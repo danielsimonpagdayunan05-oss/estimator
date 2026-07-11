@@ -116,6 +116,11 @@ document.addEventListener('click',async e=>{
     case'tblAddCol':{const t=await Tables.get(TBL_EDITING);const fl=t.columns.find(x=>x.id===TBL_SEL);fl.columns.push({key:'c'+(fl.columns.length+1),label:'Column '+(fl.columns.length+1),type:'text'});await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
     case'tblDelCol':{const t=await Tables.get(TBL_EDITING);const fl=t.columns.find(x=>x.id===TBL_SEL);fl.columns.splice(+el.dataset.i,1);await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
     case'tblToggleVis':{const t=await Tables.get(TBL_EDITING);const fl=t.columns.find(x=>x.id===el.dataset.fid);fl.visibleIf=fl.visibleIf?null:{field:'',op:'eq',value:''};await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
+    case'tblTab':TBL_TAB=el.dataset.t;render();break;
+    case'tblSetIcon':{const t=await Tables.get(TBL_EDITING);t.icon=el.dataset.v;await Store.upsert('tables',t);renderTableSettingsBody(t);break;}
+    case'tblSetColor':{const t=await Tables.get(TBL_EDITING);t.color=el.dataset.v;await Store.upsert('tables',t);renderTableSettingsBody(t);break;}
+    case'tblTogglePerm':{const t=await Tables.get(TBL_EDITING);const act=el.dataset.act,r=el.dataset.r;t.permissions=t.permissions||{};const arr=t.permissions[act]||[];
+      const i=arr.indexOf(r);if(i>=0)arr.splice(i,1);else arr.push(r);t.permissions[act]=arr;await Store.upsert('tables',t);renderTableSettingsBody(t);break;}
     case'addRelationship':await addRelationshipModal(el.dataset.tid);break;
     case'doAddRelationship':await doAddRelationship(el.dataset.tid);break;
     case'deleteRelationship':await deleteRelationshipAction(el.dataset.tid,id);break;
