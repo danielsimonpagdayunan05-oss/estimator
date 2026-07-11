@@ -1,0 +1,23 @@
+/* AU ONE STUDIO · workflow.css — visual workflow designer (node canvas) */
+.wfcanvas{max-width:580px;margin:0 auto}
+.wfnode{background:var(--glass);border:1px solid var(--stroke);border-radius:16px;box-shadow:var(--shadow2);
+  overflow:hidden;position:relative;animation:sheetup .25s ease}
+.wfnode.term{padding:13px 15px;display:flex;align-items:center;gap:12px}
+.wfnode .nic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none;box-shadow:var(--shadow2)}
+.wfnode .nhead{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--glass2);border-bottom:1px solid var(--stroke2)}
+.wfnode .nhead .nt{font-weight:800;font-size:14px;min-width:0}
+.wfnode .nhead .nt input{background:transparent;border:0;font-weight:800;font-size:14px;width:100%;padding:2px 0}
+.wfnode .nhead .nt input:focus{outline:none;border-bottom:1.5px solid var(--brand)}
+.wfnode .nmode{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:6px}
+.wfnode .nbody{padding:12px 13px}
+.wfnode .nctl{display:flex;gap:3px;margin-left:auto}
+.wfnode .nctl button{width:28px;height:28px;border-radius:8px;background:var(--glass);border:1px solid var(--stroke2);display:grid;place-items:center;color:var(--ink2)}
+.wfnode .nctl button:hover{background:var(--brandS);color:var(--brand)}
+.wfconn{position:relative;height:30px;display:grid;place-items:center}
+.wfconn .ln{position:absolute;top:0;bottom:0;width:2px;background:var(--stroke)}
+.wfconn .ins{position:relative;z-index:2;width:26px;height:26px;border-radius:50%;background:var(--glass);
+  border:1px solid var(--stroke);display:grid;place-items:center;color:var(--brand);box-shadow:var(--shadow2);transition:.15s}
+.wfconn .ins:hover{background:var(--brand);color:#fff;transform:scale(1.08)}
+.wfpalette{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.wfpalette .btn{border-style:dashed}
+.wfhint{max-width:580px;margin:0 auto 14px}

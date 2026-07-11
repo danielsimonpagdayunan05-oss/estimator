@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AU One Studio</title>
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/workflow.css">
+  <link rel="stylesheet" href="assets/css/data-views.css">
+  <link rel="stylesheet" href="assets/css/mobile.css">
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side"></aside>
+  <div class="scrim" id="scrim" data-action="closeNav"></div>
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-btn iconbtn" data-action="openNav" id="menuBtn"></button>
+      <div><h2 id="viewTitle">Dashboard</h2><div class="sub" id="viewSub"></div></div>
+      <div class="sp"></div>
+      <button class="iconbtn" data-action="search" id="searchBtn" title="Search (Ctrl+K)"></button>
+      <button class="iconbtn" data-action="cycleTheme" id="themeBtn" title="Theme"></button>
+      <button class="bell iconbtn" data-action="notifs" id="bell"></button>
+    </div>
+    <div class="pull" id="pull"></div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+<button class="fab" id="fab" data-action="fab" aria-label="Create"></button>
+<nav class="botnav" id="botnav"></nav>
+<div id="modalRoot"></div>
+<div class="toasts" id="toasts"></div>
+
+  <script src="assets/js/core/utils.js"></script>
+  <script src="assets/js/core/event-bus.js"></script>
+  <script src="assets/js/core/storage.js"></script>
+  <script src="assets/js/core/config.js"></script>
+  <script src="assets/js/engines/validation-engine.js"></script>
+  <script src="assets/js/engines/form-engine.js"></script>
+  <script src="assets/js/engines/workflow-engine.js"></script>
+  <script src="assets/js/engines/permission-engine.js"></script>
+  <script src="assets/js/engines/approval-engine.js"></script>
+  <script src="assets/js/engines/notification-engine.js"></script>
+  <script src="assets/js/engines/plugin-engine.js"></script>
+  <script src="assets/js/ui/app.js"></script>
+  <script src="assets/js/ui/dashboard.js"></script>
+  <script src="assets/js/ui/data-views.js"></script>
+  <script src="assets/js/ui/request-detail.js"></script>
+  <script src="assets/js/builders/form-builder.js"></script>
+  <script src="assets/js/builders/workflow-builder.js"></script>
+  <script src="assets/js/builders/form-settings.js"></script>
+  <script src="assets/js/ui/templates.js"></script>
+  <script src="assets/js/ui/settings.js"></script>
+  <script src="assets/js/builders/submit-form.js"></script>
+  <script src="assets/js/core/router.js"></script>
+  <script src="assets/js/core/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+/* AU ONE STUDIO · variables.css — design tokens + light/dark themes */
+/* ============================================================================
+   AU ONE ERP · APPROVAL CENTER
+   A single-file, dependency-free, configuration-driven approval workflow engine.
+   Layers (all in one file, cleanly separated in <script>):
+     Storage · Config · Forms · Workflow · Approval · Validation · Permission
+     · Notification · UI. Storage is async so swapping localStorage -> Supabase
+     is a body-only change (see Store.adapter).
+   ========================================================================== */
+:root{
+  --bg:#eef1f6; --bg2:#e6eaf2;
+  --glass:rgba(255,255,255,.72); --glass2:rgba(255,255,255,.55);
+  --stroke:rgba(17,24,39,.10); --stroke2:rgba(17,24,39,.06);
+  --ink:#0f172a; --ink2:#334155; --muted:#64748b; --muted2:#94a3b8;
+  --brand:#4f46e5; --brand2:#6366f1; --brandS:#eef2ff;
+  --ok:#059669; --okS:#ecfdf5; --warn:#d97706; --warnS:#fffbeb;
+  --bad:#dc2626; --badS:#fef2f2; --info:#0284c7; --infoS:#eff6ff;
+  --shadow:0 8px 30px rgba(15,23,42,.10); --shadow2:0 2px 10px rgba(15,23,42,.08);
+  --r:16px; --r2:12px; --r3:9px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1120; --bg2:#0f172a;
+    --glass:rgba(23,32,52,.72); --glass2:rgba(23,32,52,.5);
+    --stroke:rgba(255,255,255,.10); --stroke2:rgba(255,255,255,.06);
+    --ink:#f1f5f9; --ink2:#cbd5e1; --muted:#94a3b8; --muted2:#64748b;
+    --brandS:#1e1b4b; --okS:#052e2b; --warnS:#2e2306; --badS:#3a0d0d; --infoS:#0b2540;
+    --shadow:0 8px 30px rgba(0,0,0,.45); --shadow2:0 2px 10px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1120; --bg2:#0f172a;
+  --glass:rgba(23,32,52,.72); --glass2:rgba(23,32,52,.5);
+  --stroke:rgba(255,255,255,.10); --stroke2:rgba(255,255,255,.06);
+  --ink:#f1f5f9; --ink2:#cbd5e1; --muted:#94a3b8; --muted2:#64748b;
+  --brandS:#1e1b4b; --okS:#052e2b; --warnS:#2e2306; --badS:#3a0d0d; --infoS:#0b2540;
+  --shadow:0 8px 30px rgba(0,0,0,.45); --shadow2:0 2px 10px rgba(0,0,0,.4);
+}
+html{transition:none}
+body,.side,.topbar,.card,.btn,.inp,.modal{transition:background-color .25s ease,border-color .25s ease,color .2s ease}
