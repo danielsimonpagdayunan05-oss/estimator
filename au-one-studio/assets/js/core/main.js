@@ -77,7 +77,10 @@ document.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if((e.metaKey||e.ctrlKey)&&k==='k'){e.preventDefault();openSearch();return;}
   if(e.key==='Escape'&&$('#modalRoot').innerHTML){closeModal();return;}
-  if((e.metaKey||e.ctrlKey)&&APP.editing&&APP.builderTab==='fields'){
+  const inUndoableEditor=(APP.view==='forms'&&APP.editing&&APP.builderTab==='fields')
+    ||(APP.view==='objects'&&typeof OBJ_EDITING!=='undefined'&&OBJ_EDITING&&OBJ_TAB==='schema')
+    ||(APP.view==='database'&&typeof TBL_EDITING!=='undefined'&&TBL_EDITING);
+  if((e.metaKey||e.ctrlKey)&&inUndoableEditor){
     if(k==='z'){e.preventDefault();History.undo();}
     else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();History.redo();}
   }
@@ -94,6 +97,28 @@ document.addEventListener('keydown',e=>{
 async function boot(){
   Theme.load();
   await seedIfEmpty();
+  await seedArchiuniteBusinessObjects();
+  /* idempotent — safe every boot; makes existing collections browsable through the
+     Database Engine's generic View Engine without moving or touching their data */
+  await Tables.registerSystem([
+    {name:'Forms',icon:'layout-template',collection:'forms',primaryColumn:'name',groupColumn:'status',columns:[
+      {id:'sc_fname',key:'name',type:'text',label:'Name'},
+      {id:'sc_fmodule',key:'module',type:'text',label:'Module'},
+      {id:'sc_fstatus',key:'status',type:'text',label:'Status'}]},
+    {name:'Requests',icon:'folder',collection:'requests',primaryColumn:'formName',groupColumn:'status',columns:[
+      {id:'sc_rname',key:'formName',type:'text',label:'Form'},
+      {id:'sc_rby',key:'submittedByName',type:'text',label:'Submitted by'},
+      {id:'sc_rmodule',key:'module',type:'text',label:'Module'},
+      {id:'sc_rstatus',key:'status',type:'text',label:'Status'}]},
+    {name:'People',icon:'user',collection:'people',primaryColumn:'name',columns:[
+      {id:'sc_pname',key:'name',type:'text',label:'Name'},
+      {id:'sc_prole',key:'role',type:'text',label:'Role'},
+      {id:'sc_pdept',key:'department',type:'text',label:'Department'}]},
+    {name:'Roles',icon:'shield',collection:'roles',primaryColumn:'name'},
+    {name:'Departments',icon:'building-2',collection:'departments',primaryColumn:'name'},
+    {name:'Modules',icon:'shapes',collection:'modules',primaryColumn:'name'},
+    {name:'Projects',icon:'hard-hat',collection:'projects',primaryColumn:'name'},
+  ]);
   if(typeof Plugins!=='undefined')await Plugins.bootAll();   // let registered modules contribute
   await loadDir();
   APP.user=DIR.people[0];

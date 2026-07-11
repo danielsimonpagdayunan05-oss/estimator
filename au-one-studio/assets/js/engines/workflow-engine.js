@@ -12,7 +12,7 @@ const WorkflowEngine = {
     if(!cond||!cond.field)return true;
     const f=(form.fields||[]).find(ff=>fieldKey(ff)===cond.field);
     const raw=values[cond.field];
-    const isNumType=f && (f.type==='number'||f.type==='currency');
+    const isNumType=f && (f.type==='number'||f.type==='currency'||f.type==='formula'||f.type==='calculated');
     const a=isNumType?num(raw):String(raw??'').toLowerCase();
     const b=isNumType?num(cond.value):String(cond.value??'').toLowerCase();
     switch(cond.op){case'gt':return a>b;case'gte':return a>=b;case'lt':return a<b;

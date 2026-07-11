@@ -7,18 +7,40 @@
    10 · ACTION ROUTER  (event delegation)
    ========================================================================== */
 const SNAP_ACTIONS=new Set(['addField','delField','dupField','addOpt','delOpt','addCol','delCol','addStep','addStepAt','addStepMode','delStep','moveStep','toggleCond','addAuto','delAuto']);
+/* Phase 4: mirrors SNAP_ACTIONS for Object Studio's Schema tab and Database's
+   Table Schema editor, so History (form-builder.js) — now context-aware — gets
+   the same undo/redo coverage on those two structurally-identical schema
+   editors that Form Builder's Fields tab already had. */
+const OBJ_SNAP_ACTIONS=new Set(['objAddField','objDelField','objDupField','objAddOpt','objDelOpt','objAddCol','objDelCol','objAddStepMode','objAddStepAt','objDelStep','objMoveStep','objToggleCond','objAddAuto','objDelAuto']);
+const TBL_SNAP_ACTIONS=new Set(['tblAddField','tblDelField','tblDupField','tblAddOpt','tblDelOpt','tblAddCol','tblDelCol']);
 function wfNewStep(mode){return {id:uid('s'),name:mode==='parallel'?'Parallel review':mode==='optional'?'Optional review':'Approval',approverType:'role',role:DIR.roles[0].id,mode:mode||'sequential',condition:null,slaHours:24};}
+
+/* Phase 4: right-click on any card that already has an ellipsis "More" button
+   (objectMore/formMore/tableMore — the existing xMore()-modal pattern) opens
+   that same menu instead of the browser's native context menu — new
+   construction (no context-menu system existed before), built as a thin layer
+   on the proven modal-grid pattern rather than a new floating/positioned
+   widget. Cards with no More button (Requests' cards — its More lives inside
+   the detail modal, not the card) fall through to the native menu unchanged. */
+document.addEventListener('contextmenu',e=>{
+  const card=e.target.closest('.card.formcard');if(!card)return;
+  const moreBtn=card.querySelector('[data-action$="More"]');if(!moreBtn)return;
+  e.preventDefault();moreBtn.click();
+});
 document.addEventListener('click',async e=>{
   const el=e.target.closest('[data-action]');if(!el)return;
   const a=el.dataset.action, id=el.dataset.id;
   const F=async()=>APP.editing?await Store.get('forms',APP.editing):null;
-  if(APP.editing&&SNAP_ACTIONS.has(a)){const cf=await Store.get('forms',APP.editing);if(cf)History.snap(cf);}
+  if(APP.view==='forms'&&APP.editing&&SNAP_ACTIONS.has(a))await History.snap();
+  else if(APP.view==='objects'&&typeof OBJ_EDITING!=='undefined'&&OBJ_EDITING&&OBJ_SNAP_ACTIONS.has(a))await History.snap();
+  else if(APP.view==='database'&&typeof TBL_EDITING!=='undefined'&&TBL_EDITING&&TBL_SNAP_ACTIONS.has(a))await History.snap();
   switch(a){
     case'undo':await History.undo();break;
     case'redo':await History.redo();break;
     case'addAuto':{const f=await F();f.automations=f.automations||[];f.automations.push({on:'final',do:'notify',role:DIR.roles[0].id,text:''});await Store.upsert('forms',f);renderBuilderRules(f);break;}
     case'delAuto':{const f=await F();f.automations.splice(+el.dataset.i,1);await Store.upsert('forms',f);renderBuilderRules(f);break;}
-    case'go':APP.view=el.dataset.view;APP.editing=null;APP.navOpen=false;$('#side').classList.remove('open');$('#scrim').classList.remove('open');render();break;
+    case'go':closeModal();APP.view=el.dataset.view;APP.editing=null;APP.navOpen=false;$('#side').classList.remove('open');$('#scrim').classList.remove('open');render();break;
+    case'moreNav':moreNav();break;
     case'openNav':$('#side').classList.add('open');$('#scrim').classList.add('open');break;
     case'closeNav':$('#side').classList.remove('open');$('#scrim').classList.remove('open');break;
     case'switchUser':break;
@@ -30,6 +52,7 @@ document.addEventListener('click',async e=>{
     case'fab':await fabAction();break;
 
     case'searchGoForm':closeModal();APP.view='forms';APP.editing=id;APP.builderTab='fields';BUILDER_SEL=null;History.reset();render();break;
+    case'searchGoPerson':closeModal();APP.view='settings';render();break;
 
     /* data-engine views */
     case'reqView':APP.reqView=el.dataset.v;render();break;
@@ -78,6 +101,90 @@ document.addEventListener('click',async e=>{
     case'toggleCond':{const f=await F();const s=f.workflow.steps.find(x=>x.id===id);s.condition=s.condition?null:{field:'',op:'gt',value:''};await Store.upsert('forms',f);renderBuilderWorkflow(f);break;}
     case'toggleVis':{const f=await F();const fl=f.fields.find(x=>x.id===el.dataset.fid);fl.visibleIf=fl.visibleIf?null:{field:'',op:'eq',value:''};await Store.upsert('forms',f);renderBuilderFields(f);break;}
 
+    /* database engine: tables list / schema editor */
+    case'newTable':await newTable();break;
+    case'editTable':await editTable(id);break;
+    case'tableMore':await tableMore(id);break;
+    case'deleteTable':await deleteTable(id);break;
+    case'closeTableSchema':TBL_EDITING=null;render();break;
+    case'tblAddField':{const t=await Tables.get(TBL_EDITING);const nf=makeField(el.dataset.t);t.columns=t.columns||[];t.columns.push(nf);TBL_SEL=nf.id;await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
+    case'tblSelField':{if(e.target.closest('.acts')||e.target.closest('[data-handle]'))break;TBL_SEL=el.dataset.fid;const t=await Tables.get(TBL_EDITING);renderTableSchemaBody(t);break;}
+    case'tblDupField':{const t=await Tables.get(TBL_EDITING);const idx=t.columns.findIndex(x=>x.id===el.dataset.fid);const c=clone(t.columns[idx]);c.id=uid('f');c.key='';t.columns.splice(idx+1,0,c);await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
+    case'tblDelField':{const t=await Tables.get(TBL_EDITING);t.columns=t.columns.filter(x=>x.id!==el.dataset.fid);if(TBL_SEL===el.dataset.fid)TBL_SEL=null;await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
+    case'tblAddOpt':{const t=await Tables.get(TBL_EDITING);const fl=t.columns.find(x=>x.id===TBL_SEL);fl.options.push({label:'Option '+(fl.options.length+1),value:'Option '+(fl.options.length+1)});await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
+    case'tblDelOpt':{const t=await Tables.get(TBL_EDITING);const fl=t.columns.find(x=>x.id===TBL_SEL);fl.options.splice(+el.dataset.i,1);await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
+    case'tblAddCol':{const t=await Tables.get(TBL_EDITING);const fl=t.columns.find(x=>x.id===TBL_SEL);fl.columns.push({key:'c'+(fl.columns.length+1),label:'Column '+(fl.columns.length+1),type:'text'});await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
+    case'tblDelCol':{const t=await Tables.get(TBL_EDITING);const fl=t.columns.find(x=>x.id===TBL_SEL);fl.columns.splice(+el.dataset.i,1);await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
+    case'tblToggleVis':{const t=await Tables.get(TBL_EDITING);const fl=t.columns.find(x=>x.id===el.dataset.fid);fl.visibleIf=fl.visibleIf?null:{field:'',op:'eq',value:''};await Store.upsert('tables',t);renderTableSchemaBody(t);break;}
+    case'addRelationship':await addRelationshipModal(el.dataset.tid);break;
+    case'doAddRelationship':await doAddRelationship(el.dataset.tid);break;
+    case'deleteRelationship':await deleteRelationshipAction(el.dataset.tid,id);break;
+
+    /* database engine: records */
+    case'openTableRecords':closeModal();await openTableRecords(id);break;
+    case'closeTableRecords':await closeTableRecords();break;
+    case'dbView':APP.dbView=el.dataset.v;render();break;
+    case'newRecord':await newRecord(el.dataset.tid);break;
+    case'openRecord':await openRecord(el.dataset.tid,id);break;
+    case'saveRecord':await saveRecord();break;
+    case'deleteRecord':await deleteRecordAction(el.dataset.tid,id);break;
+    case'addRecordComment':await addRecordComment();break;
+    case'addReqComment':await addReqComment(id);break;
+    case'objMore':await objMore(el.dataset.tid,id);break;
+    case'objAct':await objAct(el.dataset.tid,id,el.dataset.act);break;
+    case'doObjAct':await doObjAct(el.dataset.tid,id,el.dataset.act);break;
+
+    /* database engine: mobile selection mode */
+    case'exitSelectionMode':SelectionMode.exit();renderSelectionBar();document.querySelectorAll('.card.formcard.selected').forEach(c=>c.classList.remove('selected'));break;
+    case'bulkDeleteSelection':{
+      const ctx=SelectionMode.context;
+      if(ctx&&ctx.tableId&&confirm(`Delete ${SelectionMode.ids.size} record(s)?`)){
+        const t=await Tables.get(ctx.tableId);
+        for(const rid of SelectionMode.ids)await Records.remove(t,rid);
+        SelectionMode.exit();renderSelectionBar();refreshDbView(t);
+      }
+      break;}
+
+    /* object studio */
+    case'newObjectModal':newObjectModal();break;
+    case'doNewObject':await doNewObject();break;
+    case'editObject':await editObject(id);break;
+    case'closeObjectEditor':await closeObjectEditor();break;
+    case'dupObject':await dupObject(id);break;
+    case'deleteObject':await deleteObject(id);break;
+    case'setObjectStatus':await setObjectStatus(id,el.dataset.s);break;
+    case'toggleObjectFav':await toggleObjectFav(id);break;
+    case'exportObject':exportObject(id);break;
+    case'objectMore':await objectMore(id);break;
+    case'objTab':OBJ_TAB=el.dataset.t;render();break;
+    case'objSetIcon':{const o=await Objects.get(OBJ_EDITING);o.icon=el.dataset.v;await Store.upsert('tables',o);renderObjectSettingsBody(o);break;}
+    case'objSetColor':{const o=await Objects.get(OBJ_EDITING);o.color=el.dataset.v;await Store.upsert('tables',o);renderObjectSettingsBody(o);break;}
+    case'objTogglePerm':{const o=await Objects.get(OBJ_EDITING);const act=el.dataset.act,r=el.dataset.r;o.permissions=o.permissions||{};const arr=o.permissions[act]||[];
+      const i=arr.indexOf(r);if(i>=0)arr.splice(i,1);else arr.push(r);o.permissions[act]=arr;await Store.upsert('tables',o);renderObjectSettingsBody(o);break;}
+
+    /* object studio: schema tab */
+    case'objAddField':{const o=await Objects.get(OBJ_EDITING);const nf=makeField(el.dataset.t);o.columns=o.columns||[];o.columns.push(nf);OBJ_SEL=nf.id;await Store.upsert('tables',o);renderObjectSchemaBody(o);break;}
+    case'objSelField':{if(e.target.closest('.acts')||e.target.closest('[data-handle]'))break;OBJ_SEL=el.dataset.fid;const o=await Objects.get(OBJ_EDITING);renderObjectSchemaBody(o);break;}
+    case'objDupField':{const o=await Objects.get(OBJ_EDITING);const idx=o.columns.findIndex(x=>x.id===el.dataset.fid);const c=clone(o.columns[idx]);c.id=uid('f');c.key='';o.columns.splice(idx+1,0,c);await Store.upsert('tables',o);renderObjectSchemaBody(o);break;}
+    case'objDelField':{const o=await Objects.get(OBJ_EDITING);o.columns=o.columns.filter(x=>x.id!==el.dataset.fid);if(OBJ_SEL===el.dataset.fid)OBJ_SEL=null;await Store.upsert('tables',o);renderObjectSchemaBody(o);break;}
+    case'objAddOpt':{const o=await Objects.get(OBJ_EDITING);const fl=o.columns.find(x=>x.id===OBJ_SEL);fl.options.push({label:'Option '+(fl.options.length+1),value:'Option '+(fl.options.length+1)});await Store.upsert('tables',o);renderObjectSchemaBody(o);break;}
+    case'objDelOpt':{const o=await Objects.get(OBJ_EDITING);const fl=o.columns.find(x=>x.id===OBJ_SEL);fl.options.splice(+el.dataset.i,1);await Store.upsert('tables',o);renderObjectSchemaBody(o);break;}
+    case'objAddCol':{const o=await Objects.get(OBJ_EDITING);const fl=o.columns.find(x=>x.id===OBJ_SEL);fl.columns.push({key:'c'+(fl.columns.length+1),label:'Column '+(fl.columns.length+1),type:'text'});await Store.upsert('tables',o);renderObjectSchemaBody(o);break;}
+    case'objDelCol':{const o=await Objects.get(OBJ_EDITING);const fl=o.columns.find(x=>x.id===OBJ_SEL);fl.columns.splice(+el.dataset.i,1);await Store.upsert('tables',o);renderObjectSchemaBody(o);break;}
+    case'objToggleVis':{const o=await Objects.get(OBJ_EDITING);const fl=o.columns.find(x=>x.id===el.dataset.fid);fl.visibleIf=fl.visibleIf?null:{field:'',op:'eq',value:''};await Store.upsert('tables',o);renderObjectSchemaBody(o);break;}
+
+    /* object studio: workflow tab */
+    case'objAddStepMode':{const o=await Objects.get(OBJ_EDITING);o.workflow=o.workflow||{steps:[]};o.workflow.steps.push(wfNewStep(el.dataset.m));await Store.upsert('tables',o);renderObjectWorkflowBody(o);break;}
+    case'objAddStepAt':{const o=await Objects.get(OBJ_EDITING);o.workflow=o.workflow||{steps:[]};o.workflow.steps.splice(+el.dataset.i,0,wfNewStep('sequential'));await Store.upsert('tables',o);renderObjectWorkflowBody(o);break;}
+    case'objMoveStep':{const o=await Objects.get(OBJ_EDITING);const arr=o.workflow.steps;const i=arr.findIndex(s=>s.id===id);const j=i+(+el.dataset.dir);
+      if(j>=0&&j<arr.length){[arr[i],arr[j]]=[arr[j],arr[i]];await Store.upsert('tables',o);renderObjectWorkflowBody(o);}break;}
+    case'objDelStep':{const o=await Objects.get(OBJ_EDITING);o.workflow.steps=o.workflow.steps.filter(s=>s.id!==id);await Store.upsert('tables',o);renderObjectWorkflowBody(o);break;}
+    case'objToggleCond':{const o=await Objects.get(OBJ_EDITING);const s=o.workflow.steps.find(x=>x.id===id);s.condition=s.condition?null:{field:'',op:'gt',value:''};await Store.upsert('tables',o);renderObjectWorkflowBody(o);break;}
+
+    /* object studio: automations tab */
+    case'objAddAuto':{const o=await Objects.get(OBJ_EDITING);o.automations=o.automations||[];o.automations.push({on:'final',do:'notify',role:DIR.roles[0].id,text:''});await Store.upsert('tables',o);renderObjectRulesBody(o);break;}
+    case'objDelAuto':{const o=await Objects.get(OBJ_EDITING);o.automations.splice(+el.dataset.i,1);await Store.upsert('tables',o);renderObjectRulesBody(o);break;}
+
     /* templates */
     case'useTemplate':{const t=await Store.get('forms',id);const c=clone(t);c.id=uid('form');c.isTemplate=false;c.status='draft';c.name=t.name;delete c.createdAt;await Store.upsert('forms',c);APP.view='forms';APP.editing=c.id;APP.builderTab='fields';History.reset();toast('Template copied to Form Builder','ok');render();break;}
     case'dupTemplatePreview':{const t=await Store.get('forms',id);SUBMIT_STATE={form:t,values:{},errors:{}};await drawSubmitModal();break;}
@@ -91,6 +198,7 @@ document.addEventListener('click',async e=>{
 
     /* requests */
     case'openReq':await openReq(id);break;
+    case'editResubmit':closeModal();await editAndResubmit(id);break;
     case'reqFilter':APP.reqFilter=el.dataset.f;render();break;
     case'reqAct':await reqAct(id,el.dataset.act);break;
     case'reqMore':await reqMore(id);break;
@@ -103,8 +211,7 @@ document.addEventListener('click',async e=>{
     case'addPerson':{const name=$('#np_name').value.trim();if(!name)break;
       await Store.upsert('people',{id:uid('u'),name,role:$('#np_role').value,department:$('#np_dept').value,color:COLOR_CHOICES[Math.floor(Math.random()*COLOR_CHOICES.length)]});
       await loadDir();render();break;}
-    case'exportData':{const raw=await Store.raw();const blob=new Blob([JSON.stringify(raw,null,2)],{type:'application/json'});
-      const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='approval-center-data.json';link.click();break;}
+    case'exportData':await exportAllData();break;
     case'resetAll':if(confirm('Erase ALL forms, requests and data on this device?')){localStorage.removeItem('ace_v1');location.reload();}break;
   }
 });
@@ -116,6 +223,7 @@ async function onGlobalInput(e){
   if(t.dataset&&t.dataset.action==='switchUser'){APP.user=DIR.people.find(p=>p.id===t.value);render();return;}
   if(t.dataset&&t.dataset.action==='reqSortSel'){APP.reqSort=t.value;render();return;}
   if(t.dataset&&t.dataset.action==='reqModuleSel'){APP.reqModule=t.value;render();return;}
+  if(t.dataset&&t.dataset.action==='dbGroupSel'){APP.dbGroupField=t.value;const tbl=await Tables.get(APP.dbTable);if(tbl)refreshDbView(tbl);return;}
   if(!APP.editing)return;
   const f=await Store.get('forms',APP.editing);if(!f)return;
   // field property
@@ -145,10 +253,18 @@ async function onGlobalInput(e){
 
 /* ---------- submit / validation ---------- */
 async function doSubmit(){
-  const {form,values}=SUBMIT_STATE;
+  const {form,values,resubmitId}=SUBMIT_STATE;
   const errors=Validation.form(form,values);
   SUBMIT_STATE.errors=errors;
   if(Object.keys(errors).length){await drawSubmitModal();toast('Please fix highlighted fields','bad');return;}
+  if(resubmitId){
+    const r=await Store.get('requests',resubmitId);
+    r.values=values;
+    await Approval.resubmit(r);
+    closeModal();toast('Request resubmitted for approval','ok');
+    APP.view='requests';render();
+    return;
+  }
   const req=await Approval.submit(form,values);
   closeModal();toast('Request submitted for approval','ok');
   APP.view='requests';render();
@@ -172,7 +288,9 @@ async function doReqAct(id,act){
   if(pick)remarks=pick.value;else if(txt)remarks=txt.value.trim();
   if(act==='reject'&&!remarks){toast('A reason is required to reject','warn');return;}
   await Approval.act(r,act,remarks);
-  closeModal();toast(`Request ${act}ed`.replace('approveed','approved').replace('canceled','cancelled'),act==='reject'?'bad':'ok');
+  const PAST_TENSE={approve:'approved',reject:'rejected',return:'returned',revision:'sent back for revision',
+    cancel:'cancelled',delegate:'delegated',forward:'forwarded',escalate:'escalated',comment:'commented'};
+  closeModal();toast(`Request ${PAST_TENSE[act]||act}`,act==='reject'?'bad':'ok');
   render();
 }
 async function reqMore(id){
@@ -192,6 +310,12 @@ async function formMore(id){
 document.addEventListener('click',async e=>{const el=e.target.closest('[data-action="archiveForm"]');if(!el)return;
   const f=await Store.get('forms',el.dataset.id);f.status=f.status==='archived'?'draft':'archived';await Store.upsert('forms',f);closeModal();render();});
 
+/* Phase 4: extracted from the inline exportData case so the Command Palette
+   (commands.js) can trigger the exact same export, not a re-implementation. */
+async function exportAllData(){
+  const raw=await Store.raw();const blob=new Blob([JSON.stringify(raw,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='approval-center-data.json';link.click();
+}
 async function showNotifs(){
   const list=await Notify.mine();await Notify.markAll();
   modal({title:'Notifications',body:list.length?`<div class="tl">${list.map(n=>`<div class="ev ${n.read?'':'info'}"><div class="mk">${svg('bell',11)}</div>
@@ -201,25 +325,51 @@ async function showNotifs(){
   render();
 }
 
-/* ---------- Global search (Ctrl/⌘+K) ---------- */
+/* ---------- Global search / Command Palette (Ctrl/⌘+K) ---------- */
+/* Phase 4: extends the original entity search with a "Commands" section
+   (commands.js — navigation/verbs/contextual actions, all routed through the
+   same data-action buttons every other click in the app already uses),
+   Objects split out of Tables, a Directory section (Modules/Roles/
+   Departments/Projects), clickable People results, keyboard list navigation,
+   and a debounce so the per-table Records scan doesn't run on every keystroke. */
 async function openSearch(){
-  modal({title:'Search',body:`<input class="inp" id="searchIn" placeholder="Search forms, requests, people…" autocomplete="off">
-    <div id="searchRes" style="margin-top:12px"><div class="muted small">Type to search across forms, requests, people and modules.</div></div>`});
+  modal({title:'Search',body:`<input class="inp" id="searchIn" placeholder="Search commands, forms, requests, objects, tables, people…" autocomplete="off">
+    <div id="searchRes" style="margin-top:12px"><div class="muted small">Type to search — or run a command.</div></div>`});
   const inp=$('#searchIn');inp.focus();
-  const run=async()=>{
+  const nav=wireArrowNav(inp,$('#searchRes'),'.cmdrow');
+  const run=debounce(async()=>{
     const q=inp.value.trim().toLowerCase();const box=$('#searchRes');
-    if(!q){box.innerHTML='<div class="muted small">Type to search…</div>';return;}
+    nav.reset();
+    if(!q){box.innerHTML='<div class="muted small">Type to search — or run a command.</div>';return;}
+    const cmdHits=allCommands().filter(c=>c.keywords.includes(q)||c.label.toLowerCase().includes(q)).slice(0,6);
     const forms=(await Store.list('forms')).filter(f=>!f.isTemplate);
     const reqs=await Store.list('requests');
     const hitF=forms.filter(f=>(f.name+f.description+f.module).toLowerCase().includes(q)).slice(0,6);
     const hitR=reqs.filter(r=>(r.formName+r.submittedByName+r.module+JSON.stringify(r.values)).toLowerCase().includes(q)).slice(0,8);
     const hitP=DIR.people.filter(p=>(p.name+p.role+p.department).toLowerCase().includes(q)).slice(0,5);
+    const allTables=(await Tables.list()).filter(t=>!t.system);
+    const hitO=allTables.filter(t=>t.kind==='object'&&t.name.toLowerCase().includes(q)).slice(0,5);
+    const hitT=allTables.filter(t=>t.kind!=='object'&&t.name.toLowerCase().includes(q)).slice(0,5);
+    const hitRec=[];
+    for(const t of allTables){
+      if(hitRec.length>=8)break;
+      const rows=await Records.list(t);
+      for(const r of rows){if(hitRec.length>=8)break;if(JSON.stringify(r).toLowerCase().includes(q))hitRec.push({t,r});}
+    }
+    const dirColls=[['modules','Modules','shapes'],['roles','Roles','shield'],['departments','Departments','building-2'],['projects','Projects','hard-hat']];
+    const hitDir=[];
+    for(const[coll,,icon] of dirColls){for(const d of DIR[coll]){if(d.name.toLowerCase().includes(q))hitDir.push({name:d.name,icon});if(hitDir.length>=6)break;}}
     const sec=(t,items)=>items.length?`<div class="sectitle" style="margin:12px 4px 6px">${t}</div>${items.join('')}`:'';
-    box.innerHTML=(sec('Forms',hitF.map(f=>`<button class="btn block" style="justify-content:flex-start;margin-bottom:6px" data-action="searchGoForm" data-id="${f.id}">${svg(f.icon,15)} ${esc(f.name)}</button>`))
-      +sec('Requests',hitR.map(r=>`<button class="btn block" style="justify-content:flex-start;margin-bottom:6px" data-action="openReq" data-id="${r.id}">${svg(r.icon||'file-text',15)} ${esc(r.formName)} <span class="status ${r.status}" style="margin-left:auto">${r.status}</span></button>`))
-      +sec('People',hitP.map(p=>`<div class="chip" style="margin:0 6px 6px 0">${svg('user',13)} ${esc(p.name)} · ${esc(p.role)}</div>`)))
+    box.innerHTML=(sec('Commands',cmdHits.map(c=>c.html))
+      +sec('Forms',hitF.map(f=>`<button class="btn block cmdrow" style="justify-content:flex-start;margin-bottom:6px" data-action="searchGoForm" data-id="${f.id}">${svg(f.icon,15)} ${esc(f.name)}</button>`))
+      +sec('Objects',hitO.map(t=>`<button class="btn block cmdrow" style="justify-content:flex-start;margin-bottom:6px" data-action="openTableRecords" data-id="${t.id}">${svg(t.icon,15)} ${esc(t.name)}</button>`))
+      +sec('Requests',hitR.map(r=>`<button class="btn block cmdrow" style="justify-content:flex-start;margin-bottom:6px" data-action="openReq" data-id="${r.id}">${svg(r.icon||'file-text',15)} ${esc(r.formName)} <span class="status ${r.status}" style="margin-left:auto">${r.status}</span></button>`))
+      +sec('Tables',hitT.map(t=>`<button class="btn block cmdrow" style="justify-content:flex-start;margin-bottom:6px" data-action="openTableRecords" data-id="${t.id}">${svg(t.icon,15)} ${esc(t.name)}</button>`))
+      +sec('Records',hitRec.map(({t,r})=>`<button class="btn block cmdrow" style="justify-content:flex-start;margin-bottom:6px" data-action="openRecord" data-tid="${t.id}" data-id="${r.id}">${svg(t.icon,15)} ${esc(Tables.summarize(t,r).title)} <span class="tiny muted" style="margin-left:auto">${esc(t.name)}</span></button>`))
+      +sec('People',hitP.map(p=>`<button class="btn block cmdrow" style="justify-content:flex-start;margin-bottom:6px" data-action="searchGoPerson" data-id="${p.id}">${svg('user',13)} ${esc(p.name)} <span class="tiny muted" style="margin-left:auto">${esc(p.role)}</span></button>`))
+      +sec('Directory',hitDir.map(d=>`<button class="btn block cmdrow" style="justify-content:flex-start;margin-bottom:6px" data-action="go" data-view="settings">${svg(d.icon,13)} ${esc(d.name)}</button>`)))
       ||'<div class="muted small">No matches.</div>';
-  };
+  },150);
   inp.addEventListener('input',run);
 }
 
@@ -237,10 +387,20 @@ async function fabAction(){
 }
 
 /* ---------- Saved views (Data Engine) ---------- */
+/* Phase 4: also callable from Database Records (db-records.js's viewToolbar),
+   not just Requests — context tags which screen a saved view belongs to, so
+   each screen's saved-views chip row only ever shows its own views. */
 async function saveCurrentView(){
   const name=prompt('Name this view (filters, sort & layout will be saved):','My view');
   if(!name)return;
-  await Store.upsert('views',{id:uid('view'),name,owner:APP.user.id,
-    state:{reqView:APP.reqView,reqFilter:APP.reqFilter,reqModule:APP.reqModule,reqSort:APP.reqSort}});
+  let state,context;
+  if(APP.view==='requests'){
+    state={reqView:APP.reqView,reqFilter:APP.reqFilter,reqModule:APP.reqModule,reqSort:APP.reqSort,reqQuery:APP.reqQuery};
+    context='requests';
+  }else{
+    state={dbView:APP.dbView,dbGroupField:APP.dbGroupField,dbQuery:APP.dbQuery};
+    context='db:'+APP.dbTable;
+  }
+  await Store.upsert('views',{id:uid('view'),name,owner:APP.user.id,context,state});
   toast('View saved','ok');render();
 }

@@ -5,7 +5,8 @@
 
 async function renderTemplates(c){
   let tpls=(await Store.list('forms')).filter(f=>f.isTemplate);
-  c.innerHTML=`<div class="small muted" style="margin-bottom:12px">Start from a ready-made form. “Use” creates an editable copy in your Form Builder.</div>
+  c.innerHTML=listPageHeader({countLabel:`${tpls.length} template(s)`})
+    +`<div class="small muted" style="margin-bottom:12px">Start from a ready-made form. “Use” creates an editable copy in your Form Builder.</div>
     <div class="grid cols">${tpls.map(t=>`<div class="card formcard"><div class="bar" style="background:${t.color}"></div>
       <div class="body"><div class="row"><div class="icon" style="background:${t.color}">${svg(t.icon,22)}</div><span class="sp"></span><span class="chip">${svg('library',13)} Template</span></div>
       <h3>${esc(t.name)}</h3><div class="small muted">${esc(t.description||'')}</div>

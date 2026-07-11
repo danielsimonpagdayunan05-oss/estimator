@@ -1,49 +1,69 @@
 /* AU ONE STUDIO · mobile.css — FAB, bottom nav, bottom-sheet, responsive */
 /* ---- FAB + bottom nav (mobile) ---- */
-.fab{display:none;position:fixed;right:16px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:48;
+.fab{display:none;position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:48;
   width:58px;height:58px;border-radius:19px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;
-  box-shadow:0 10px 26px rgba(79,70,229,.5);place-items:center;transition:.15s}
-.fab:active{transform:scale(.92)}
+  box-shadow:0 10px 28px rgba(79,70,229,.5),inset 0 1px 0 rgba(255,255,255,.25);place-items:center;
+  transition:transform var(--dur-1) var(--ease),box-shadow var(--dur-1) var(--ease)}
+.fab:active{transform:scale(.9);box-shadow:0 5px 16px rgba(79,70,229,.45)}
 .botnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:50;padding:8px 6px calc(8px + env(safe-area-inset-bottom));
-  background:var(--glass);border-top:1px solid var(--stroke);backdrop-filter:blur(20px) saturate(1.4);
-  -webkit-backdrop-filter:blur(20px) saturate(1.4);grid-template-columns:repeat(5,1fr)}
-.botnav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:12px;color:var(--muted);font-size:10px;font-weight:700;position:relative}
+  background:var(--glass);border-top:1px solid var(--stroke);backdrop-filter:blur(24px) saturate(1.5);
+  -webkit-backdrop-filter:blur(24px) saturate(1.5);grid-template-columns:repeat(6,1fr)}
+.botnav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;border-radius:12px;
+  color:var(--muted);font-size:10px;font-weight:700;position:relative;
+  transition:color var(--dur-1) var(--ease),transform var(--dur-1) var(--ease)}
+.botnav button:active{transform:scale(.94)}
 .botnav button.on{color:var(--brand)}
 .botnav button.on .lu{transform:translateY(-1px)}
-.botnav button .nb{position:absolute;top:2px;right:calc(50% - 20px);background:var(--bad);color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:9px;display:grid;place-items:center;padding:0 4px}
+/* active tab gets a small floating indicator pill */
+.botnav button.on::before{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  width:18px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--brand),var(--brand2));
+  animation:popin var(--dur-2) var(--ease-spring)}
+.botnav button .nb{position:absolute;top:2px;right:calc(50% - 20px);background:var(--bad);color:#fff;font-size:9px;font-weight:800;
+  min-width:16px;height:16px;border-radius:9px;display:grid;place-items:center;padding:0 4px;
+  box-shadow:0 2px 6px rgba(220,38,38,.4)}
 .pull{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-weight:600;transition:height .15s}
 
-/* ---- mobile ---- */
+/* ---- responsive ---- */
 @media(max-width:960px){
   .builder{grid-template-columns:1fr}
   .palette,.inspector{position:static}
 }
 @media(max-width:820px){
   .app{grid-template-columns:1fr}
-  .side{position:fixed;z-index:70;left:0;top:0;width:280px;transform:translateX(-102%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow)}
+  .side{position:fixed;z-index:70;left:0;top:0;width:282px;transform:translateX(-102%);
+    transition:transform var(--dur-3) var(--ease);box-shadow:var(--shadow-lg)}
   .side.open{transform:none}
-  .menu-btn{display:none}
-  .scrim{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.4);display:none}
-  .scrim.open{display:block;animation:fadein .2s}
-  .content{padding:14px 14px calc(88px + env(safe-area-inset-bottom))}
+  /* the off-canvas sidebar's trigger — was display:none, leaving the sidebar
+     (and the user switcher inside it) unreachable on phones */
+  .menu-btn{display:grid;width:40px;height:40px;border-radius:11px;background:var(--glass2);
+    border:1px solid var(--stroke);place-items:center;color:var(--ink2)}
+  .scrim{position:fixed;inset:0;z-index:65;background:var(--scrim);display:none}
+  .scrim.open{display:block;animation:fadein var(--dur-2) var(--ease)}
+  .content{padding:14px 14px calc(92px + env(safe-area-inset-bottom))}
   .f2{grid-template-columns:1fr}
   .topbar h2{font-size:17px}
   .topbar{padding:12px 14px}
   .fab{display:grid}
   .botnav{display:grid}
+  /* mobile already has the FAB as its quick-create affordance on every screen —
+     the topbar's desktop-only quick-create button would just duplicate it */
+  .hide-mobile{display:none!important}
   /* bottom-sheet modals with drag handle & big touch targets */
   .overlay{align-items:flex-end;padding:0}
-  .modal{border-radius:22px 22px 0 0;max-height:90dvh;animation:sheetup .3s cubic-bezier(.4,0,.2,1)}
+  .modal{border-radius:22px 22px 0 0;max-height:90dvh;animation:sheetup var(--dur-3) var(--ease)}
   .modal .mh{padding-top:20px}
   .modal .mh::before{content:"";position:absolute;top:7px;left:50%;transform:translateX(-50%);width:38px;height:4px;border-radius:4px;background:var(--muted2);opacity:.5}
+  /* comfortable 44px+ touch targets */
   .btn{padding:12px 16px}
   .btn.sm{padding:9px 12px}
-  .inp{padding:12px 13px;font-size:16px}
+  .inp{padding:12px 13px;font-size:16px}   /* 16px prevents iOS zoom-on-focus */
   .checkline{padding:12px}
   .mf .btn{flex:1;justify-content:center}
   .kanban{grid-auto-columns:82%}
+  /* no hover on touch: keep per-row actions & drag handles always visible */
+  .fitem .acts{opacity:1}
+  .fitem .handle{opacity:1}
+  .wfconn .ins{opacity:1}
 }
-@keyframes fadein{from{opacity:0}to{opacity:1}}
-@keyframes sheetup{from{transform:translateY(100%)}to{transform:none}}
 @media(min-width:821px){.hide-desktop{display:none!important}}
 @media(max-width:560px){.hide-sm{display:none!important}}

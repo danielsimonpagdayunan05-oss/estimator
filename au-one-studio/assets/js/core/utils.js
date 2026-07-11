@@ -21,6 +21,7 @@ const ago = ts=>{if(!ts)return'';const s=(Date.now()-ts)/1000;
 const clone=o=>JSON.parse(JSON.stringify(o));
 function setPath(obj,path,val){const p=path.split('.');let o=obj;for(let i=0;i<p.length-1;i++){if(o[p[i]]==null)o[p[i]]={};o=o[p[i]];}o[p[p.length-1]]=val;}
 function getPath(obj,path){return path.split('.').reduce((o,k)=>o==null?undefined:o[k],obj);}
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 
 /* ---- Icon system: inlined Lucide (lucide.dev, ISC/MIT). No external deps. ---- */
 const ICONS={
@@ -110,3 +111,8 @@ const ICONS={
 };
 function svg(name,size){const p=ICONS[name];if(p==null)return esc(name||'');
   return `<svg class="lu" width="${size||18}" height="${size||18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;}
+
+/* named icon-size scale — consumed by new Phase-4 chrome (chrome.js, commands.js);
+   the ~164 pre-existing svg() call sites keep their own ad hoc sizes for now
+   (a full retrofit is out of scope, see the Phase 4 closing audit) */
+const ICON_SIZES={xs:14,sm:16,md:18,lg:22,xl:28};

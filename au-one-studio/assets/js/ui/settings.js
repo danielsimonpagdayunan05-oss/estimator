@@ -15,8 +15,8 @@ async function renderSettings(c){
         <div><div style="font-weight:700;font-size:13.5px">${esc(p.name)}</div><div class="tiny muted">${esc(p.role)} · ${esc(p.department)}</div></div>
         <span class="sp"></span><button class="btn sm ghost" data-action="delDir" data-coll="people" data-id="${p.id}">${svg('x',14)}</button></div>`).join('')}
       <div class="f2" style="margin-top:8px"><input class="inp" id="np_name" placeholder="Full name">
-        <select class="inp" id="np_role">${DIR.roles.map(r=>`<option>${esc(r.name)}</option>`).join('')}</select>
-        <select class="inp" id="np_dept">${DIR.departments.map(d=>`<option>${esc(d.name)}</option>`).join('')}</select>
+        <select class="inp" id="np_role">${DIR.roles.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select>
+        <select class="inp" id="np_dept">${DIR.departments.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join('')}</select>
         <button class="btn primary" data-action="addPerson">${svg('plus',15)} Add person</button></div>
     </div>
     ${sec('Roles','roles',DIR.roles)}

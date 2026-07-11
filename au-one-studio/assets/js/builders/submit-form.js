@@ -12,6 +12,13 @@ async function useForm(id){
   SUBMIT_STATE={form:f,values,errors:{}};
   await drawSubmitModal();
 }
+/* owner fixes values on a returned/revision request, then resubmits into the same request (no new record) */
+async function editAndResubmit(reqId){
+  const r=await Store.get('requests',reqId);if(!r)return;
+  const f=await Store.get('forms',r.formId);if(!f)return;
+  SUBMIT_STATE={form:f,values:clone(r.values),errors:{},resubmitId:r.id};
+  await drawSubmitModal();
+}
 /* conditional visibility: is a field currently shown given the form values? */
 function fieldVisible(fl,values,form){return fl.visibleIf&&fl.visibleIf.field?WorkflowEngine.test(fl.visibleIf,values,form):true;}
 function applyVisibility(){const S=SUBMIT_STATE;if(!S)return;
@@ -27,8 +34,8 @@ async function drawSubmitModal(){
     <div><div style="font-weight:800">${esc(form.name)}</div><div class="small muted">${esc(form.description||'')}</div></div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">${fieldsHtml.join('')}</div>`;
   const footer=`<button class="btn ghost" data-action="closeModal">Cancel</button>
-    <button class="btn primary" data-action="doSubmit">Submit request</button>`;
-  modal({title:'New Request',body,footer,wide:true});
+    <button class="btn primary" data-action="doSubmit">${SUBMIT_STATE.resubmitId?'Save &amp; resubmit':'Submit request'}</button>`;
+  modal({title:SUBMIT_STATE.resubmitId?'Edit & Resubmit':'New Request',body,footer,wide:true});
   wireSubmitInputs();
 }
 async function renderSubmitField(fl,values,errors){
@@ -104,6 +111,7 @@ function wireSubmitInputs(){
   const root=$('#modalRoot');
   root.addEventListener('input',onSubmitInput);
   root.addEventListener('change',onSubmitInput);
+  root.addEventListener('click',onSubmitChoiceClick);
   // signature pads
   $$('canvas[data-sig]',root).forEach(setupSignature);
   applyVisibility();
@@ -111,11 +119,20 @@ function wireSubmitInputs(){
 function onSubmitInput(e){
   const t=e.target;const S=SUBMIT_STATE;if(!S)return;
   if(t.dataset.bind!=null){let v=t.type==='checkbox'?t.checked:t.value;S.values[t.dataset.bind]=v;recalc();applyVisibility();}
+  else if(t.dataset.choice!=null){S.values[t.dataset.choice]=t.dataset.v;recalc();applyVisibility();}
   else if(t.dataset.multi!=null){const key=t.dataset.multi;const arr=Array.isArray(S.values[key])?S.values[key]:[];
     const val=t.dataset.v;if(t.checked){if(!arr.includes(val))arr.push(val);}else{const i=arr.indexOf(val);if(i>=0)arr.splice(i,1);}S.values[key]=arr;}
   else if(t.dataset.rrow!=null){const wrap=t.closest('[data-repeat]');const key=wrap.dataset.repeat;
     const arr=Array.isArray(S.values[key])?S.values[key]:[];const ri=+t.dataset.rrow;arr[ri]=arr[ri]||{};arr[ri][t.dataset.rcol]=t.value;S.values[key]=arr;}
   else if(t.dataset.upload!=null){const file=t.files[0];if(file){const rd=new FileReader();rd.onload=()=>{S.values[t.dataset.upload]=rd.result;drawSubmitModal();};rd.readAsDataURL(file);}}
+}
+/* yesno buttons and rating stars don't fire native input/change events — need a click listener */
+function onSubmitChoiceClick(e){
+  const S=SUBMIT_STATE;if(!S)return;
+  const btn=e.target.closest('button[data-choice]');
+  if(btn){S.values[btn.dataset.choice]=btn.dataset.v;recalc();drawSubmitModal();return;}
+  const star=e.target.closest('[data-n]');
+  if(star){const wrap=star.closest('[data-rating]');if(wrap){S.values[wrap.dataset.rating]=+star.dataset.n;recalc();drawSubmitModal();}}
 }
 function recalc(){const S=SUBMIT_STATE;if(!S)return;
   $$('[data-calc]',$('#modalRoot')).forEach(el=>{const fl=S.form.fields.find(f=>f.id===el.dataset.fid);

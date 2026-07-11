@@ -80,5 +80,15 @@ const Approval = {
     }
     await Store.upsert('requests',req);
     return req;
+  },
+  /* owner edits values on a returned/revision request and sends it back into the same step */
+  async resubmit(req){
+    const step=req.steps[req.currentStep];
+    if(step){step.status='pending';step.decidedBy='';step.decidedAt=0;step.remarks='';}
+    req.status=req.currentStep>0?'inprogress':'pending';
+    req.timeline.push({at:Date.now(),by:APP.user.name,type:'resubmit',text:'Resubmitted for approval'});
+    await Store.upsert('requests',req);
+    await this._notifyCurrent(req);
+    return req;
   }
 };

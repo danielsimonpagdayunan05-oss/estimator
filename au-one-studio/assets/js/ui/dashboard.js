@@ -26,6 +26,11 @@ async function renderDashboard(c){
     <button class="btn primary" data-action="go" data-view="forms">${svg('layout-template',16)} Build a form</button>
     <button class="btn" data-action="go" data-view="templates">${svg('library',16)} Use a template</button>
   </div>`;
+  /* Phase 4: reqCard already emits the exact .card.formcard[data-action="openReq"]
+     markup enhanceMobileCards' default selector matches — it just wasn't wired
+     up here, so long-press-to-select worked on Requests' own list but not on
+     these same cards shown on the Dashboard. */
+  $$('.grid.cols',c).forEach(g=>enhanceMobileCards(g,null,()=>renderSelectionBar({onBulkDelete:false})));
 }
 function emptyCard(ic,t,m){return `<div class="card pad empty"><div class="big" style="color:var(--muted2)">${svg(ic,38)}</div><div style="font-size:15px;color:var(--ink)">${t}</div><div class="small">${m}</div></div>`;}
 function reqCard(r){const step=r.steps[r.currentStep];
@@ -43,6 +48,8 @@ async function renderInbox(c){
   const list=reqs.filter(r=>['pending','inprogress'].includes(r.status)&&Permission.isApproverFor(r.steps[r.currentStep]));
   c.innerHTML=list.length?`<div class="grid cols">${list.map(reqCard).join('')}</div>`
     :emptyCard('inbox','Inbox zero','No requests are waiting on your role right now. Switch user in the sidebar to test other approvers.');
+  const grid=c.querySelector('.grid.cols');
+  if(grid)enhanceMobileCards(grid,null,()=>renderSelectionBar({onBulkDelete:false}));
 }
 
 /* ---------- Requests · DATA ENGINE (Cards/Table/Kanban/Calendar + filter/sort/saved views) ---------- */

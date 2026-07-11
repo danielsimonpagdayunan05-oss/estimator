@@ -26,7 +26,14 @@ const Plugins = {
       on: (e, f) => Bus.on(e, f),
       async addTemplate(form) { form.isTemplate = true; form.status = 'published';
         form.id = form.id || (uid('form')); await Store.upsert('forms', form); },
-      registerFieldType(key, def) { if (!FieldTypes[key]) FieldTypes[key] = def; }
+      registerFieldType(key, def) { if (!FieldTypes[key]) FieldTypes[key] = def; },
+      /* Database Engine extension points — additive, mirror addTemplate's shape */
+      async addTable(def) { return Tables.create(def); },
+      async addRelationship(table, def) { return Relationships.create(table, def); },
+      registerRollupFunction(name, fn) { Formula.registerFunction(name, fn); },
+      registerView(name, renderFn) { DB_VIEW_TYPES[name] = renderFn; },
+      async addDashboard() { /* reserved for a future phase — plugins may register once dashboards are pluggable */ },
+      async addReport() { /* reserved for a future phase — plugins may register once reports are pluggable */ }
     };
   },
   async bootAll() {

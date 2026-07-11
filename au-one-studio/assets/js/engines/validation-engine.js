@@ -9,8 +9,9 @@
 const Validation = {
   field(f,val){
     if(FieldTypes[f.type]?.layout)return null;
-    const empty = val===''||val==null||(Array.isArray(val)&&!val.length)||val===false&&f.type!=='checkbox';
-    if(f.required && (val===''||val==null||(Array.isArray(val)&&!val.length)))return 'Required';
+    const empty = val===''||val==null||(Array.isArray(val)&&!val.length)
+      ||(f.type==='checkbox'&&val===false)||(f.type==='rating'&&!val);
+    if(f.required && empty)return 'Required';
     if(empty)return null;
     if(f.type==='email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))return 'Invalid email';
     if(f.type==='phone' && !/^[0-9+()\-\s]{7,}$/.test(val))return 'Invalid phone';

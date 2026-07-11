@@ -1,40 +1,97 @@
-/* AU ONE STUDIO · variables.css — design tokens + light/dark themes */
-/* ============================================================================
-   AU ONE ERP · APPROVAL CENTER
-   A single-file, dependency-free, configuration-driven approval workflow engine.
-   Layers (all in one file, cleanly separated in <script>):
-     Storage · Config · Forms · Workflow · Approval · Validation · Permission
-     · Notification · UI. Storage is async so swapping localStorage -> Supabase
-     is a body-only change (see Store.adapter).
+/* AU ONE STUDIO · variables.css — design tokens + light/dark themes
+   ============================================================================
+   THE DESIGN SYSTEM CONTRACT
+   Every color, radius, shadow, duration and easing in the app resolves to a
+   token defined here. Component files never invent ad-hoc values for these —
+   change a token, and the whole product moves together.
    ========================================================================== */
 :root{
-  --bg:#eef1f6; --bg2:#e6eaf2;
-  --glass:rgba(255,255,255,.72); --glass2:rgba(255,255,255,.55);
-  --stroke:rgba(17,24,39,.10); --stroke2:rgba(17,24,39,.06);
-  --ink:#0f172a; --ink2:#334155; --muted:#64748b; --muted2:#94a3b8;
-  --brand:#4f46e5; --brand2:#6366f1; --brandS:#eef2ff;
-  --ok:#059669; --okS:#ecfdf5; --warn:#d97706; --warnS:#fffbeb;
-  --bad:#dc2626; --badS:#fef2f2; --info:#0284c7; --infoS:#eff6ff;
-  --shadow:0 8px 30px rgba(15,23,42,.10); --shadow2:0 2px 10px rgba(15,23,42,.08);
-  --r:16px; --r2:12px; --r3:9px;
+  /* ---- surfaces ---- */
+  --bg:#f0f2f8; --bg2:#e8ebf4;
+  --glass:rgba(255,255,255,.78); --glass2:rgba(255,255,255,.55);
+  --glass-solid:#ffffff;
+  --stroke:rgba(15,23,42,.09); --stroke2:rgba(15,23,42,.055);
+
+  /* ---- ink ---- */
+  --ink:#0d1425; --ink2:#38445c; --muted:#67748e; --muted2:#98a3b8;
+
+  /* ---- brand + semantics ---- */
+  --brand:#4f46e5; --brand2:#6d5ff2; --brandS:#eef0ff;
+  --brand-ink:#3f37c9;
+  --ok:#059669; --okS:#eafaf3; --warn:#d97706; --warnS:#fef7e8;
+  --bad:#dc2626; --badS:#feefef; --info:#0284c7; --infoS:#ecf6fe;
+  --amber:#f59e0b;
+  --scrim:rgba(8,12,24,.44);
+
+  /* ---- elevation (ambient + key light, scales together) ---- */
+  --shadow-xs:0 1px 2px rgba(15,23,42,.05);
+  --shadow2:0 1px 3px rgba(15,23,42,.06),0 4px 14px rgba(15,23,42,.06);
+  --shadow:0 2px 6px rgba(15,23,42,.05),0 12px 34px rgba(15,23,42,.10);
+  --shadow-lg:0 4px 10px rgba(15,23,42,.06),0 24px 60px rgba(15,23,42,.16);
+  --glow-brand:0 6px 20px rgba(79,70,229,.32);
+  --glow-ok:0 6px 20px rgba(5,150,105,.3);
+  --glow-bad:0 6px 20px rgba(220,38,38,.28);
+
+  /* ---- focus ring ---- */
+  --ring:0 0 0 3px rgba(79,70,229,.18);
+  --ring-bad:0 0 0 3px rgba(220,38,38,.14);
+
+  /* ---- shape ---- */
+  --r:16px; --r2:12px; --r3:9px; --r-pill:999px;
+
+  /* ---- motion ---- */
+  --ease:cubic-bezier(.22,.61,.36,1);          /* standard decel */
+  --ease-spring:cubic-bezier(.32,1.25,.5,1);   /* playful overshoot */
+  --dur-1:.14s; --dur-2:.22s; --dur-3:.34s;
+
+  /* ---- spacing scale (Phase 4: new chrome only — not retrofitted app-wide) ---- */
+  --space-1:2px; --space-2:4px; --space-3:8px; --space-4:12px;
+  --space-5:16px; --space-6:20px; --space-7:28px; --space-8:36px;
+
+  /* ---- typography scale (Phase 4: new chrome only) ---- */
+  --fs-xs:11px; --fs-sm:12.5px; --fs-md:14px; --fs-lg:16px; --fs-xl:20px; --fs-2xl:26px;
+  --fw-regular:400; --fw-medium:600; --fw-bold:800;
+
+  /* ---- select-arrow chevron (was duplicated raw in components.css + layout.css,
+     each with a stray stroke-width of 1.6 instead of the app-wide 2, and a color
+     not derived from --muted) ---- */
+  --chevron-icon:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12'><path d='M2 4l4 4 4-4' stroke='%2367748e' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0b1120; --bg2:#0f172a;
-    --glass:rgba(23,32,52,.72); --glass2:rgba(23,32,52,.5);
-    --stroke:rgba(255,255,255,.10); --stroke2:rgba(255,255,255,.06);
-    --ink:#f1f5f9; --ink2:#cbd5e1; --muted:#94a3b8; --muted2:#64748b;
-    --brandS:#1e1b4b; --okS:#052e2b; --warnS:#2e2306; --badS:#3a0d0d; --infoS:#0b2540;
-    --shadow:0 8px 30px rgba(0,0,0,.45); --shadow2:0 2px 10px rgba(0,0,0,.4);
+    --bg:#0a0f1e; --bg2:#0d1528;
+    --glass:rgba(22,30,52,.78); --glass2:rgba(24,33,56,.52);
+    --glass-solid:#161e34;
+    --stroke:rgba(226,232,255,.10); --stroke2:rgba(226,232,255,.06);
+    --ink:#eef2fb; --ink2:#c3cce0; --muted:#8e9ab4; --muted2:#5e6a85;
+    --brand2:#7c6ffb; --brandS:#211d4f; --brand-ink:#a5b4fc;
+    --okS:#07302a; --warnS:#2f2408; --badS:#3a0f0f; --infoS:#0b2540;
+    --shadow-xs:0 1px 2px rgba(0,0,0,.3);
+    --shadow2:0 1px 3px rgba(0,0,0,.35),0 4px 14px rgba(0,0,0,.32);
+    --shadow:0 2px 6px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.45);
+    --shadow-lg:0 4px 10px rgba(0,0,0,.35),0 24px 60px rgba(0,0,0,.55);
+    --glow-brand:0 6px 22px rgba(109,95,242,.42);
+    --ring:0 0 0 3px rgba(124,111,251,.28);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0b1120; --bg2:#0f172a;
-  --glass:rgba(23,32,52,.72); --glass2:rgba(23,32,52,.5);
-  --stroke:rgba(255,255,255,.10); --stroke2:rgba(255,255,255,.06);
-  --ink:#f1f5f9; --ink2:#cbd5e1; --muted:#94a3b8; --muted2:#64748b;
-  --brandS:#1e1b4b; --okS:#052e2b; --warnS:#2e2306; --badS:#3a0d0d; --infoS:#0b2540;
-  --shadow:0 8px 30px rgba(0,0,0,.45); --shadow2:0 2px 10px rgba(0,0,0,.4);
+  --bg:#0a0f1e; --bg2:#0d1528;
+  --glass:rgba(22,30,52,.78); --glass2:rgba(24,33,56,.52);
+  --glass-solid:#161e34;
+  --stroke:rgba(226,232,255,.10); --stroke2:rgba(226,232,255,.06);
+  --ink:#eef2fb; --ink2:#c3cce0; --muted:#8e9ab4; --muted2:#5e6a85;
+  --brand2:#7c6ffb; --brandS:#211d4f; --brand-ink:#a5b4fc;
+  --okS:#07302a; --warnS:#2f2408; --badS:#3a0f0f; --infoS:#0b2540;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.3);
+  --shadow2:0 1px 3px rgba(0,0,0,.35),0 4px 14px rgba(0,0,0,.32);
+  --shadow:0 2px 6px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.45);
+  --shadow-lg:0 4px 10px rgba(0,0,0,.35),0 24px 60px rgba(0,0,0,.55);
+  --glow-brand:0 6px 22px rgba(109,95,242,.42);
+  --ring:0 0 0 3px rgba(124,111,251,.28);
 }
 html{transition:none}
 body,.side,.topbar,.card,.btn,.inp,.modal{transition:background-color .25s ease,border-color .25s ease,color .2s ease}
+/* users who prefer reduced motion get instant state changes, no exceptions */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}

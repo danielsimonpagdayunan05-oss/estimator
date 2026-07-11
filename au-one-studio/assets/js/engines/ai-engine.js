@@ -63,7 +63,7 @@ const AI = {
     const fields = a.fields.map(spec => this._field(spec)).filter(Boolean);
     const steps = a.flow.map((role,i)=>({ id: uid('s'), name: role, approverType:'role', role, mode:'sequential', condition:null, slaHours:24 }));
     // conditional CEO step for money forms over ₱100k
-    const moneyKey = (fields.find(f=>f.type==='currency'||f.type==='formula')||{}).key;
+    const moneyKey = (fields.find(f=>f.type==='formula'||f.type==='calculated')||fields.find(f=>f.type==='currency')||{}).key;
     if (a.bigApprover && moneyKey) steps.push({ id:uid('s'), name:`${a.bigApprover} (> ₱100k)`, approverType:'role', role:a.bigApprover, mode:'sequential', slaHours:24, condition:{ field:moneyKey, op:'gt', value:'100000' } });
     const automations = [{ on:'final', do:'notify', role: steps[0]?.role || 'Supervisor', text:'' }];
     return {
