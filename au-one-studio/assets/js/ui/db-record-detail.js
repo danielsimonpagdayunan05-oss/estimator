@@ -162,7 +162,7 @@ async function saveRecord(){
   refreshDbView(S.table);
 }
 async function deleteRecordAction(tableId,recordId){
-  if(!confirm('Delete this record?'))return;
+  if(!await confirmModal({title:'Delete record?',confirmLabel:'Delete record'}))return;
   const t=await Tables.get(tableId);if(!t)return;
   await Records.remove(t,recordId);
   closeModal();toast('Record deleted');
@@ -186,7 +186,7 @@ async function objAct(tableId,recordId,action){
   const needsText=['reject','return','revision','comment','escalate'].includes(action);
   const needsPick=['delegate','forward'].includes(action);
   if(!needsText&&!needsPick){await doObjAct(tableId,recordId,action);return;}
-  const body=needsPick?`<div class="field"><label>Send to</label><select class="inp" id="objActPick">${DIR.people.map(p=>`<option value="${p.id}">${esc(p.name)} (${esc(p.role)})</option>`).join('')}</select></div>`
+  const body=needsPick?`<div class="field"><label>Send to</label><select class="inp" id="objActPick">${peoplePickerOptions()}</select></div>`
     :`<div class="field"><label>Remarks${action==='reject'?'':' (optional)'}</label><textarea class="inp" id="objActText" placeholder="Add a note…"></textarea></div>`;
   modal({title:action[0].toUpperCase()+action.slice(1),body,
     footer:`<button class="btn ghost" data-action="closeModal">Cancel</button>
@@ -201,8 +201,6 @@ async function doObjAct(tableId,recordId,action){
   if(action==='reject'&&!remarks){toast('A reason is required to reject','warn');return;}
   await ObjectApproval.act(t,rec,action,remarks);
   closeModal();
-  const PAST_TENSE={approve:'approved',reject:'rejected',return:'returned',revision:'sent back for revision',
-    cancel:'cancelled',delegate:'delegated',forward:'forwarded',escalate:'escalated',comment:'commented'};
-  toast(`Record ${PAST_TENSE[action]||action}`,action==='reject'?'bad':'ok');
+  toast(`Record ${ACTION_PAST_TENSE[action]||action}`,action==='reject'?'bad':'ok');
   refreshDbView(t);
 }

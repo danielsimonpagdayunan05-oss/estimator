@@ -77,3 +77,30 @@ function viewToolbar({views,activeView,viewAction,quickFilter,groupBy,sortSelect
     `<span class="chip" data-action="loadView" data-id="${v.id}">${svg('star',12)} ${esc(v.name)}<button data-action="delView" data-id="${v.id}" style="margin-left:4px;color:var(--muted)">${svg('x',11)}</button></span>`).join('')}</div>`:'';
   return `<div class="viewbar">${segmented}<span class="sp"></span>${qf}${gb}${ss}${saveBtn}</div>${savedRow}`;
 }
+
+/* ============================================================================
+   CHROME · save-status indicator (Universal Status System, topbar slice)
+   Every Store write (upsert/remove/bulk, all funnel through _save) now emits
+   'store:saving'/'store:saved'/'store:error' — this turns that into the one
+   visible Saving…/Saved/Error affordance next to the topbar icon cluster,
+   instead of writes staying invisible. Function definitions only here: this
+   file loads BEFORE event-bus.js (Bus doesn't exist yet at parse time), so
+   the actual Bus.on() subscriptions happen in init(), called once from
+   main.js's boot() after every script has loaded — same pattern populateAUS()
+   uses for the same reason. Rapid bursts of writes (e.g. seeding on first
+   boot) coalesce into a single Saving…->Saved cycle via the trailing debounce
+   in saved(), rather than flickering once per write.
+   ========================================================================== */
+const SaveStatus={
+  _savedTimer:null,_fadeTimer:null,
+  _el(){ return document.getElementById('saveStatus'); },
+  _set(state,label){ const e=this._el(); if(!e)return; e.className='save-status show '+state; e.innerHTML=`<span class="dot"></span>${esc(label)}`; },
+  saving(){ clearTimeout(this._savedTimer); clearTimeout(this._fadeTimer); this._set('saving','Saving…'); },
+  saved(){ clearTimeout(this._savedTimer);
+    this._savedTimer=setTimeout(()=>{ this._set('saved','Saved');
+      clearTimeout(this._fadeTimer);
+      this._fadeTimer=setTimeout(()=>{ const e=this._el(); if(e)e.classList.remove('show'); },1600);
+    },400); },
+  error(){ clearTimeout(this._savedTimer); clearTimeout(this._fadeTimer); this._set('error','Save failed'); },
+  init(){ Bus.on('store:saving',()=>this.saving()); Bus.on('store:saved',()=>this.saved()); Bus.on('store:error',()=>this.error()); }
+};

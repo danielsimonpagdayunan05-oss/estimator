@@ -6,7 +6,7 @@
    the SAME data-action names every other button in the app already dispatches
    through router.js's one delegated click listener — no new execution path,
    no duplicated business logic, and every destructive command (Delete) still
-   goes through its existing confirm() gate untouched.
+   goes through its existing confirmModal() gate untouched.
    Part of the AU One Studio low-code platform. Classic script (module pattern):
    shares one global scope across all <script> files — no build step, opens via file://. */
 
@@ -59,7 +59,7 @@ function verbCommands(){
 /* only relevant while inside an editor — Undo/Redo route through the same
    context-aware History (form-builder.js, Stage 6) already wired to all three
    schema editors; Duplicate/Delete reuse each screen's own existing function,
-   including Delete's existing confirm() gate. Scoped by APP.view, matching
+   including Delete's existing confirmModal() gate. Scoped by APP.view, matching
    History._ctx()'s own scoping, so a stale editing-id from a screen you've
    navigated away from never surfaces a command that would act on the wrong
    entity. */

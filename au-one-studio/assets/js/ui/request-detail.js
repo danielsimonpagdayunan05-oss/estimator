@@ -10,7 +10,7 @@ async function openReq(id){
   const canAct=['pending','inprogress'].includes(r.status)&&Permission.isApproverFor(step);
   const isOwner=r.submittedBy===APP.user.id;
   const body=`
-    <div class="row" style="margin-bottom:10px"><div class="icon formcard" style="width:44px;height:44px;background:${r.color||'#4f46e5'};border-radius:12px;display:grid;place-items:center;color:#fff">${svg(r.icon||'file-text',22)}</div>
+    <div class="row" style="margin-bottom:10px"><div class="icon formcard" style="width:44px;height:44px;background:${r.color||'var(--brand)'};border-radius:var(--r2);display:grid;place-items:center;color:#fff">${svg(r.icon||'file-text',22)}</div>
       <div><div style="font-weight:800;font-size:16px">${esc(r.formName)}</div>
       <div class="small muted">by ${esc(r.submittedByName)} · ${fmtDT(r.submittedAt)}</div></div>
       <span class="sp"></span><span class="status ${r.status}">${r.status}</span></div>

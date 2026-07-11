@@ -66,7 +66,7 @@ function reqTable(list,mountEl){
   host.innerHTML=`<table class="dtable"><thead><tr>
     <th>Request</th><th>Submitted by</th><th>Module</th><th class="hide-sm">Current step</th><th>Date</th><th>Status</th></tr></thead><tbody></tbody></table>`;
   return VirtualTable(host,{rows:list,rowHeight:43,renderRow:r=>{const step=r.steps[r.currentStep];
-    return `<tr data-action="openReq" data-id="${r.id}"><td><div class="row" style="gap:8px"><span style="color:${r.color||'#4f46e5'};display:inline-flex">${svg(r.icon||'file-text',16)}</span><b>${esc(r.formName)}</b></div></td>
+    return `<tr data-action="openReq" data-id="${r.id}"><td><div class="row" style="gap:8px"><span style="color:${r.color||'var(--brand)'};display:inline-flex">${svg(r.icon||'file-text',16)}</span><b>${esc(r.formName)}</b></div></td>
       <td>${esc(r.submittedByName)}</td><td>${esc(r.module||'—')}</td>
       <td class="hide-sm">${r.status==='pending'&&step?esc(step.name):'—'}</td>
       <td>${fmtDate(r.submittedAt)}</td><td><span class="status ${r.status}">${r.status}</span></td></tr>`;}});

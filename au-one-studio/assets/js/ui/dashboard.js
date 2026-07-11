@@ -34,8 +34,8 @@ async function renderDashboard(c){
 }
 function emptyCard(ic,t,m){return `<div class="card pad empty"><div class="big" style="color:var(--muted2)">${svg(ic,38)}</div><div style="font-size:15px;color:var(--ink)">${t}</div><div class="small">${m}</div></div>`;}
 function reqCard(r){const step=r.steps[r.currentStep];
-  return `<div class="card formcard" data-action="openReq" data-id="${r.id}"><div class="bar" style="background:${r.color||'#4f46e5'}"></div>
-    <div class="body"><div class="row"><div class="icon" style="background:${r.color||'#4f46e5'}">${svg(r.icon||'file-text',22)}</div>
+  return `<div class="card formcard" data-action="openReq" data-id="${r.id}"><div class="bar" style="background:${r.color||'var(--brand)'}"></div>
+    <div class="body"><div class="row"><div class="icon" style="background:${r.color||'var(--brand)'}">${svg(r.icon||'file-text',22)}</div>
       <span class="sp"></span><span class="status ${r.status}">${r.status}</span></div>
     <h3>${esc(r.formName)}</h3>
     <div class="small muted">by ${esc(r.submittedByName)} · ${ago(r.submittedAt)}</div>

@@ -44,6 +44,18 @@
 .topbar h2{margin:0;font-size:18px;font-weight:800;letter-spacing:-.02em}
 .topbar .sub{color:var(--muted);font-size:12px;font-weight:600;margin-top:1px;letter-spacing:0}
 .topbar .sp{flex:1}
+/* Phase 4: Universal Status System, topbar slice — reflects Store's
+   fire-and-forget writes as a visible Saving…/Saved/Error state instead of
+   giving no feedback at all. Wired in chrome.js via Bus 'store:saving'/
+   'store:saved'/'store:error'. */
+.save-status{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--muted);
+  padding:0 4px;transition:opacity var(--dur-2) var(--ease);opacity:0}
+.save-status.show{opacity:1}
+.save-status .dot{width:7px;height:7px;border-radius:var(--r-pill);background:var(--muted2);flex:none}
+.save-status.saving .dot{background:var(--warn);animation:pulse 1s ease-in-out infinite}
+.save-status.saved .dot{background:var(--ok)}
+.save-status.error .dot{background:var(--bad)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .bell{position:relative;width:40px;height:40px;border-radius:11px;background:var(--glass2);border:1px solid var(--stroke);
   display:grid;place-items:center;font-size:17px}
 .bell .dot{position:absolute;top:7px;right:8px;width:9px;height:9px;border-radius:9px;background:var(--bad);

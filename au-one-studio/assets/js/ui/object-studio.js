@@ -39,7 +39,7 @@ function objectCard(o){
   const stepCount=(o.workflow?.steps||[]).length;
   return `<div class="card formcard"><div class="bar" style="background:${o.color}"></div>
     <div class="body"><div class="row"><div class="icon" style="background:${o.color}">${svg(o.icon,22)}</div><span class="sp"></span>
-      <button class="iconbtn" style="width:32px;height:32px;${o.favorite?'color:#f59e0b':''}" data-action="objToggleFav" data-id="${o.id}" title="Favorite" aria-label="${o.favorite?'Remove from favorites':'Add to favorites'}">${svg('star',15)}</button>
+      <button class="iconbtn" style="width:32px;height:32px;${o.favorite?'color:var(--amber)':''}" data-action="objToggleFav" data-id="${o.id}" title="Favorite" aria-label="${o.favorite?'Remove from favorites':'Add to favorites'}">${svg('star',15)}</button>
       <span class="status ${o.status}">${o.status}</span></div>
     <h3>${esc(o.name)}</h3><div class="small muted">${esc(o.description||o.category||'No description')}</div>
     <div class="meta"><span class="chip">${svg('shapes',13)} ${esc(o.module||'—')}</span>
@@ -65,7 +65,7 @@ async function objectMore(id){
 /* ---------- New Object ---------- */
 function newObjectModal(){
   modal({title:'New Object',body:`
-    <div class="row" style="gap:10px;margin-bottom:12px"><div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;display:grid;place-items:center;flex:none">${svg('package',20)}</div>
+    <div class="row" style="gap:10px;margin-bottom:12px"><div style="width:40px;height:40px;border-radius:var(--r2);background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;display:grid;place-items:center;flex:none">${svg('package',20)}</div>
       <div class="small muted">A Business Object gets a Table, a Form, Views, an Approval Workflow, Timeline, Comments and Permissions automatically — nothing to assemble by hand.</div></div>
     <div class="field"><label>Object name</label><input class="inp" id="objName" placeholder="e.g. Purchase Request"></div>
     <div class="field"><label>Plural name</label><input class="inp" id="objPlural" placeholder="e.g. Purchase Requests"></div>
@@ -93,7 +93,7 @@ async function dupObject(id){
   toast(`Duplicated as "${c.name}"`,'ok');render();
 }
 async function deleteObject(id){
-  if(!confirm('Delete this object? Its records will be kept in storage but the object will no longer be browsable.'))return;
+  if(!await confirmModal({title:'Delete object?',message:'Its records will be kept in storage but the object will no longer be browsable.',confirmLabel:'Delete object'}))return;
   await Objects.remove(id);OBJ_EDITING=null;closeModal();toast('Object deleted');render();
 }
 async function setObjectStatus(id,status){

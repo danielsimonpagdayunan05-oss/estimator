@@ -20,9 +20,13 @@ const Store = (()=>{
     async _all(){ if(_cache)return _cache;
       try{_cache=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){_cache={};} return _cache; },
     async _save(db){ _cache=db;
-      const json=JSON.stringify(db);
-      if(json.length>4000000)console.warn('[Store] blob exceeds 4MB — approaching localStorage quota');
-      localStorage.setItem(KEY,json); },
+      Bus.emit('store:saving');
+      try{
+        const json=JSON.stringify(db);
+        if(json.length>4000000)console.warn('[Store] blob exceeds 4MB — approaching localStorage quota');
+        localStorage.setItem(KEY,json);
+        Bus.emit('store:saved');
+      }catch(e){ Bus.emit('store:error',e); throw e; } },
     async list(coll){ const db=await this._all(); return db[coll]||[]; },
     async get(coll,id){ return (await this.list(coll)).find(x=>x.id===id)||null; },
     async upsert(coll,rec){ const db=await this._all(); db[coll]=db[coll]||[];

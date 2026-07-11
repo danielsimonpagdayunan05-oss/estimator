@@ -70,7 +70,7 @@ document.addEventListener('click',async e=>{
     case'btab':APP.builderTab=el.dataset.t;render();break;
     case'useForm':await useForm(id);break;
     case'dupForm':{const f=await Store.get('forms',id);const c=clone(f);c.id=uid('form');c.name=f.name+' (copy)';c.status='draft';c.isTemplate=false;delete c.createdAt;await Store.upsert('forms',c);toast('Form duplicated','ok');render();break;}
-    case'deleteForm':if(confirm('Delete this form? Existing requests are kept.')){await Store.remove('forms',id);APP.editing=null;toast('Form deleted');render();}break;
+    case'deleteForm':if(await confirmModal({title:'Delete form?',message:'Existing requests are kept.',confirmLabel:'Delete form'})){await Store.remove('forms',id);APP.editing=null;toast('Form deleted');render();}break;
     case'formMore':await formMore(id);break;
     case'setStatus':{const f=await F();f.status=el.dataset.s;if(f.status==='published'&&!(f.fields||[]).length){toast('Add at least one field first','warn');f.status='draft';}await Store.upsert('forms',f);toast('Status: '+f.status,'ok');render();break;}
     case'saveTemplate':{const f=await Store.get('forms',id);const c=clone(f);c.id=uid('form');c.isTemplate=true;c.status='published';delete c.createdAt;await Store.upsert('forms',c);toast('Saved as template','ok');break;}
@@ -138,7 +138,7 @@ document.addEventListener('click',async e=>{
     case'exitSelectionMode':SelectionMode.exit();renderSelectionBar();document.querySelectorAll('.card.formcard.selected').forEach(c=>c.classList.remove('selected'));break;
     case'bulkDeleteSelection':{
       const ctx=SelectionMode.context;
-      if(ctx&&ctx.tableId&&confirm(`Delete ${SelectionMode.ids.size} record(s)?`)){
+      if(ctx&&ctx.tableId&&await confirmModal({title:'Delete records?',message:`Delete ${SelectionMode.ids.size} record(s)? This cannot be undone.`,confirmLabel:'Delete'})){
         const t=await Tables.get(ctx.tableId);
         for(const rid of SelectionMode.ids)await Records.remove(t,rid);
         SelectionMode.exit();renderSelectionBar();refreshDbView(t);
@@ -212,7 +212,7 @@ document.addEventListener('click',async e=>{
       await Store.upsert('people',{id:uid('u'),name,role:$('#np_role').value,department:$('#np_dept').value,color:COLOR_CHOICES[Math.floor(Math.random()*COLOR_CHOICES.length)]});
       await loadDir();render();break;}
     case'exportData':await exportAllData();break;
-    case'resetAll':if(confirm('Erase ALL forms, requests and data on this device?')){localStorage.removeItem('ace_v1');location.reload();}break;
+    case'resetAll':if(await confirmModal({title:'Reset everything?',message:'Erase ALL forms, requests and data on this device. This cannot be undone.',confirmLabel:'Erase everything'})){localStorage.removeItem('ace_v1');location.reload();}break;
   }
 });
 /* selects / text inputs via change+input delegation (builder props & workflow) */
@@ -275,7 +275,7 @@ async function reqAct(id,act){
   const needsText=['reject','return','revision','comment','escalate'].includes(act);
   const needsPick=['delegate','forward'].includes(act);
   if(!needsText&&!needsPick){await doReqAct(id,act);return;}
-  const body=needsPick?`<div class="field"><label>Send to</label><select class="inp" id="actPick">${DIR.people.map(p=>`<option value="${p.id}">${esc(p.name)} (${esc(p.role)})</option>`).join('')}</select></div>`
+  const body=needsPick?`<div class="field"><label>Send to</label><select class="inp" id="actPick">${peoplePickerOptions()}</select></div>`
     :`<div class="field"><label>Remarks${act==='reject'?'':' (optional)'}</label><textarea class="inp" id="actText" placeholder="Add a note…"></textarea></div>`;
   modal({title:act[0].toUpperCase()+act.slice(1),body,
     footer:`<button class="btn ghost" data-action="closeModal">Cancel</button>
@@ -288,9 +288,7 @@ async function doReqAct(id,act){
   if(pick)remarks=pick.value;else if(txt)remarks=txt.value.trim();
   if(act==='reject'&&!remarks){toast('A reason is required to reject','warn');return;}
   await Approval.act(r,act,remarks);
-  const PAST_TENSE={approve:'approved',reject:'rejected',return:'returned',revision:'sent back for revision',
-    cancel:'cancelled',delegate:'delegated',forward:'forwarded',escalate:'escalated',comment:'commented'};
-  closeModal();toast(`Request ${PAST_TENSE[act]||act}`,act==='reject'?'bad':'ok');
+  closeModal();toast(`Request ${ACTION_PAST_TENSE[act]||act}`,act==='reject'?'bad':'ok');
   render();
 }
 async function reqMore(id){
@@ -391,7 +389,7 @@ async function fabAction(){
    not just Requests — context tags which screen a saved view belongs to, so
    each screen's saved-views chip row only ever shows its own views. */
 async function saveCurrentView(){
-  const name=prompt('Name this view (filters, sort & layout will be saved):','My view');
+  const name=await promptModal({title:'Save view',message:'Filters, sort & layout will be saved.',defaultValue:'My view',confirmLabel:'Save view'});
   if(!name)return;
   let state,context;
   if(APP.view==='requests'){

@@ -96,6 +96,7 @@ document.addEventListener('keydown',e=>{
 
 async function boot(){
   Theme.load();
+  SaveStatus.init();
   await seedIfEmpty();
   await seedArchiuniteBusinessObjects();
   /* idempotent — safe every boot; makes existing collections browsable through the
@@ -123,6 +124,26 @@ async function boot(){
   await loadDir();
   APP.user=DIR.people[0];
   await render();
+  populateAUS();
   Bus.emit('app:ready',AUS);
+}
+/* Phase 4: makes window.AUS a real integration surface instead of the empty
+   {engines:{},builders:{},ui:{}} shell it started as — event-bus.js's own
+   header comment promises "external ERP modules read everything through
+   window.AUS", so this fulfils that rather than leaving it dead scaffolding.
+   Runs once, at the end of boot(), after every engine/builder file below has
+   already defined its top-level const — safe without touching each file's
+   own load-order position. Values are the live objects (not copies), so a
+   consuming module holding a reference sees the same state the app itself
+   mutates. */
+function populateAUS(){
+  Object.assign(AUS.engines,{
+    store:Store, validation:Validation, form:FormEngine, ai:AI, workflow:WorkflowEngine,
+    permission:Permission, approval:Approval, notify:Notify, plugins:Plugins,
+    tables:Tables, query:Query, records:Records, relationships:Relationships,
+    formula:Formula, dbPermission:DBPermission, objects:Objects, objectApproval:ObjectApproval,
+  });
+  Object.assign(AUS.builders,{ history:History });
+  Object.assign(AUS.ui,{ app:APP, dir:DIR, theme:Theme, modal, confirmModal, promptModal, toast, render });
 }
 boot();

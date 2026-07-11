@@ -51,8 +51,7 @@ const ObjectApproval = {
   async act(table,rec,action,remarks){
     const step=rec.steps[rec.currentStep];
     const evt={at:Date.now(),by:APP.user.name,type:action,text:'',remarks:remarks||''};
-    const label={approve:'Approved',reject:'Rejected',return:'Returned',revision:'Requested revision',
-      comment:'Commented',delegate:'Delegated',escalate:'Escalated',forward:'Forwarded',cancel:'Cancelled'}[action];
+    const label=ACTION_LABEL[action];
     if(action==='comment'){evt.text='Comment';rec.comments.push({by:APP.user.name,at:Date.now(),text:remarks||''});
       rec.timeline.push(evt);await Store.upsert(table.collection,rec);return rec;}
     if(step){step.decidedBy=APP.user.name;step.decidedAt=Date.now();step.remarks=remarks||'';step.action=action;}

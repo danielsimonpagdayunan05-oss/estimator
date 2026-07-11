@@ -51,6 +51,54 @@ function modal({title,body,footer,wide}){
   }else if(modalEl){
     modalEl.focus({preventScroll:true});
   }
+  /* Tab focus-trap — keeps keyboard focus cycling inside the dialog instead of
+     leaking to the page behind it, standard modal a11y that role="dialog"
+     alone doesn't give you for free. */
+  if(modalEl)modalEl.addEventListener('keydown',e=>{
+    if(e.key!=='Tab')return;
+    const focusables=[...modalEl.querySelectorAll('button,input,select,textarea,a[href],[tabindex]:not([tabindex="-1"])')]
+      .filter(x=>!x.disabled&&x.offsetParent!==null);
+    if(!focusables.length)return;
+    const first=focusables[0],last=focusables[focusables.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  });
+}
+
+/* ---- Universal Dialog System ----
+   confirmModal()/promptModal() are drop-in Promise-based replacements for the
+   browser's native confirm()/prompt() — same shared modal() shell (theme, ARIA,
+   focus-trap, Escape/backdrop/X close) instead of an unthemed native dialog.
+   `if(await confirmModal({message:'…'}))` reads exactly like the old
+   `if(confirm('…'))`, so call sites only need `confirm(` -> `await confirmModal(`. */
+function confirmModal({title,message,confirmLabel,danger}={}){
+  return new Promise(resolve=>{
+    modal({title:title||'Are you sure?',
+      body:`<div class="small">${esc(message||'')}</div>`,
+      footer:`<button class="btn ghost" id="confirmNo">Cancel</button>
+        <button class="btn ${danger===false?'primary':'bad'}" id="confirmYes">${esc(confirmLabel||'Delete')}</button>`});
+    let settled=false;const done=v=>{if(settled)return;settled=true;resolve(v);};
+    $('#confirmYes').addEventListener('click',()=>{done(true);closeModal();});
+    $('#confirmNo').addEventListener('click',()=>{done(false);closeModal();});
+    const obs=new MutationObserver(()=>{if(!$('#modalRoot').querySelector('.overlay')){done(false);obs.disconnect();}});
+    obs.observe($('#modalRoot'),{childList:true});
+  });
+}
+function promptModal({title,message,defaultValue,placeholder,confirmLabel}={}){
+  return new Promise(resolve=>{
+    modal({title:title||'Enter a value',
+      body:`${message?`<div class="small muted" style="margin-bottom:8px">${esc(message)}</div>`:''}
+        <input class="inp" id="promptInput" value="${esc(defaultValue||'')}" placeholder="${esc(placeholder||'')}">`,
+      footer:`<button class="btn ghost" id="promptNo">Cancel</button>
+        <button class="btn primary" id="promptYes">${esc(confirmLabel||'Save')}</button>`});
+    const inp=$('#promptInput');inp.focus({preventScroll:true});inp.select();
+    let settled=false;const done=v=>{if(settled)return;settled=true;resolve(v);};
+    $('#promptYes').addEventListener('click',()=>{done(inp.value.trim()||null);closeModal();});
+    $('#promptNo').addEventListener('click',()=>{done(null);closeModal();});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();done(inp.value.trim()||null);closeModal();}});
+    const obs=new MutationObserver(()=>{if(!$('#modalRoot').querySelector('.overlay')){done(null);obs.disconnect();}});
+    obs.observe($('#modalRoot'),{childList:true});
+  });
 }
 /* plays the .closing exit animation (base.css: fadeout/popout/sheetdown) before
    actually clearing #modalRoot, instead of the previous instant cut to nothing;

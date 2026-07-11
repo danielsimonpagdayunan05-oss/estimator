@@ -62,7 +62,7 @@ async function newTable(){
 }
 async function editTable(id){ APP.view='database';TBL_EDITING=id;TBL_SEL=null;History.reset();render(); }
 async function deleteTable(id){
-  if(!confirm('Delete this table? All its records will be kept in storage but the table will no longer be browsable.'))return;
+  if(!await confirmModal({title:'Delete table?',message:'All its records will be kept in storage but the table will no longer be browsable.',confirmLabel:'Delete table'}))return;
   await Tables.remove(id);render();
 }
 

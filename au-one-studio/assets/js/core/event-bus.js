@@ -16,7 +16,10 @@ const Bus = (() => {
   };
 })();
 
-/* AUS — the single global namespace for the platform. Engines attach themselves
-   as they load; external ERP modules read everything through window.AUS. */
+/* AUS — the single global namespace for the platform. Starts empty here (this
+   file loads first); main.js's populateAUS() fills engines/builders/ui once
+   every other file has loaded, right before emitting 'app:ready'. External
+   ERP modules should wait for that event, then read everything through
+   window.AUS instead of depending on individual global names. */
 const AUS = { version: '1.0.0', bus: Bus, engines: {}, builders: {}, ui: {} };
 window.AUS = AUS;

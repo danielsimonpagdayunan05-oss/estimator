@@ -44,8 +44,7 @@ const Approval = {
     const step=req.steps[req.currentStep];
     const form=await Store.get('forms',req.formId);
     const evt={at:Date.now(),by:APP.user.name,type:action,text:'',remarks:remarks||''};
-    const label={approve:'Approved',reject:'Rejected',return:'Returned',revision:'Requested revision',
-      comment:'Commented',delegate:'Delegated',escalate:'Escalated',forward:'Forwarded',cancel:'Cancelled'}[action];
+    const label=ACTION_LABEL[action];
     if(action==='comment'){evt.text='Comment';req.comments.push({by:APP.user.name,at:Date.now(),text:remarks||''});
       req.timeline.push(evt);await Store.upsert('requests',req);return req;}
     if(step){step.decidedBy=APP.user.name;step.decidedAt=Date.now();step.remarks=remarks||'';step.action=action;}

@@ -18,6 +18,16 @@ const fmtDT =ts=>ts?new Date(ts).toLocaleString('en-PH',{month:'short',day:'nume
 const ago = ts=>{if(!ts)return'';const s=(Date.now()-ts)/1000;
   if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';
   if(s<604800)return Math.floor(s/86400)+'d ago';return fmtDate(ts);};
+
+/* Approval action wording — shared by Approval/ObjectApproval (timeline event
+   text) and router.js/db-record-detail.js (toast copy), previously four
+   separate copies of the same two maps. */
+const ACTION_LABEL={approve:'Approved',reject:'Rejected',return:'Returned',revision:'Requested revision',
+  comment:'Commented',delegate:'Delegated',escalate:'Escalated',forward:'Forwarded',cancel:'Cancelled'};
+const ACTION_PAST_TENSE={approve:'approved',reject:'rejected',return:'returned',revision:'sent back for revision',
+  cancel:'cancelled',delegate:'delegated',forward:'forwarded',escalate:'escalated',comment:'commented'};
+/* People-picker <option> list — used by any "delegate/forward to…" dialog. */
+const peoplePickerOptions=()=>DIR.people.map(p=>`<option value="${p.id}">${esc(p.name)} (${esc(p.role)})</option>`).join('');
 const clone=o=>JSON.parse(JSON.stringify(o));
 function setPath(obj,path,val){const p=path.split('.');let o=obj;for(let i=0;i<p.length-1;i++){if(o[p[i]]==null)o[p[i]]={};o=o[p[i]];}o[p[p.length-1]]=val;}
 function getPath(obj,path){return path.split('.').reduce((o,k)=>o==null?undefined:o[k],obj);}
