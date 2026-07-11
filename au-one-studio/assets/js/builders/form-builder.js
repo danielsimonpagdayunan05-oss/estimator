@@ -5,7 +5,8 @@
 
 async function renderForms(c){
   const forms=(await Store.list('forms')).filter(f=>!f.isTemplate);
-  c.innerHTML=`<div class="row" style="margin-bottom:14px"><button class="btn primary" data-action="newForm">${svg('plus',15)} Create Form</button>
+  c.innerHTML=`<div class="row wrap" style="margin-bottom:14px"><button class="btn primary" data-action="aiNew">${svg('sparkles',15)} Create with AI</button>
+    <button class="btn" data-action="newForm">${svg('plus',15)} Blank form</button>
     <span class="sp"></span><span class="chip">${forms.length} form(s)</span></div>
     ${forms.length?`<div class="grid cols">${forms.map(formCard).join('')}</div>`
       :emptyCard('layout-template','No forms yet','Click “Create Form” to build one with drag-and-drop, or start from a template.')}`;
@@ -22,6 +23,30 @@ function formCard(f){return `<div class="card formcard"><div class="bar" style="
     <button class="btn sm" data-action="dupForm" data-id="${f.id}">${svg('copy',13)} Duplicate</button>
     <button class="btn sm ghost" data-action="formMore" data-id="${f.id}">${svg('ellipsis',15)}</button>
   </div></div></div>`;}
+
+/* ---------- AI: describe-to-generate ---------- */
+function openAIModal(){
+  const examples=['Create a Material Request form','Purchase request over ₱100k needs CEO','QA inspection checklist','Leave request','Variation order','Petty cash request'];
+  modal({title:'Create with AI',body:`
+    <div class="row" style="gap:10px;margin-bottom:12px"><div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;display:grid;place-items:center;flex:none">${svg('sparkles',20)}</div>
+      <div class="small muted">Describe the form you need in plain language. AU One Studio generates the fields, validation, approval workflow and automations — all fully editable afterward.</div></div>
+    <textarea class="inp" id="aiPrompt" placeholder="e.g. Create a Material Request form for site deliveries" style="min-height:96px"></textarea>
+    <div class="small muted" style="margin:12px 2px 6px;font-weight:700">Try one of these</div>
+    <div class="row wrap" style="gap:6px">${examples.map(x=>`<button class="chip" data-action="aiExample" data-x="${esc(x)}">${svg('sparkles',12)} ${esc(x)}</button>`).join('')}</div>`,
+    footer:`<button class="btn ghost" data-action="closeModal">Cancel</button><button class="btn primary" data-action="aiGenerate">${svg('sparkles',15)} Generate form</button>`});
+  setTimeout(()=>{const el=$('#aiPrompt');if(el)el.focus();},60);
+}
+async function aiGenerate(){
+  const el=$('#aiPrompt');const prompt=(el?el.value:'').trim();
+  if(!prompt){toast('Describe the form first','warn');return;}
+  const form=await AI.generateForm(prompt);
+  await Store.upsert('forms',form);
+  Bus.emit('form:generated',form);
+  closeModal();
+  APP.view='forms';APP.editing=form.id;APP.builderTab='fields';BUILDER_SEL=null;History.reset();
+  toast(`Generated "${form.name}" — ${form.fields.length} fields, ${form.workflow.steps.length} steps`,'ok');
+  render();
+}
 
 async function newForm(){
   const f={id:uid('form'),name:'Untitled Form',description:'',icon:'file-text',color:'#4f46e5',

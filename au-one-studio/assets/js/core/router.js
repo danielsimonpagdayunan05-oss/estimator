@@ -39,6 +39,9 @@ document.addEventListener('click',async e=>{
 
     /* forms */
     case'newForm':await newForm();break;
+    case'aiNew':openAIModal();break;
+    case'aiExample':{const t=$('#aiPrompt');if(t){t.value=el.dataset.x;t.focus();}break;}
+    case'aiGenerate':await aiGenerate();break;
     case'editForm':APP.editing=id;APP.builderTab='fields';BUILDER_SEL=null;History.reset();render();break;
     case'closeBuilder':APP.editing=null;render();break;
     case'btab':APP.builderTab=el.dataset.t;render();break;
