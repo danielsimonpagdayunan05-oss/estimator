@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Approvals — AU One ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#13202e; --ink2:#1d3042; --paper:#eceae1; --paper2:#f6f5ef;
+  --line:#c8c3b4; --line2:#d9d5c8;
+  --amber:#e0922b; --amber-d:#b9701a; --amber-soft:#f6e3c4;
+  --steel:#2f6f8f; --green:#3c7d52; --red:#bb4634;
+  --muted:#6b7280; --muted2:#8b8576;
+  --shadow:0 1px 0 #fff inset, 0 2px 8px rgba(19,32,46,.08);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:'Archivo',sans-serif;color:var(--ink);background:var(--paper);
+  background-image:linear-gradient(rgba(19,32,46,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(19,32,46,.035) 1px,transparent 1px);
+  background-size:22px 22px;font-size:15px;line-height:1.4;padding-bottom:80px}
+.mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.02em}
+header{position:sticky;top:0;z-index:40;background:var(--ink);color:var(--paper2);padding:12px 16px;box-shadow:0 4px 16px rgba(19,32,46,.25)}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border:2px solid var(--amber);border-radius:5px;flex:none;display:grid;place-items:center;font-weight:900;color:var(--amber);font-size:14px;
+  background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(224,146,43,.12) 3px,rgba(224,146,43,.12) 5px)}
+.brand h1{font-size:16px;line-height:1.05;letter-spacing:-.01em}
+.brand small{display:block;font-weight:500;font-size:10.5px;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+main{padding:16px 14px 0;max-width:640px;margin:0 auto}
+.intro{font-size:13px;color:var(--ink2);background:var(--amber-soft);border:1px solid #e8cf9e;border-left:4px solid var(--amber);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+.intro b{font-weight:800}
+.card{background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card.item{border-left:4px solid var(--steel);position:relative}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.card-head h3{font-size:14.5px;flex:1;word-break:break-word}
+.idx{width:22px;height:22px;border-radius:6px;background:var(--ink);color:var(--paper2);display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
+.del{border:0;background:#f0d9d4;color:var(--red);width:28px;height:28px;border-radius:7px;font-size:16px;font-weight:800;cursor:pointer;flex:none;line-height:1}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:1fr 1fr}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+label.f .lbl{display:flex;justify-content:space-between;align-items:baseline}
+label.f .u{color:var(--muted2);font-weight:600;text-transform:none;letter-spacing:0}
+input,select,textarea{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;appearance:none;-webkit-appearance:none}
+textarea{font-family:'Archivo',sans-serif;resize:vertical;min-height:64px}
+select{font-family:'Archivo',sans-serif;font-weight:600;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%2313202e' stroke-width='1.6' fill='none'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(224,146,43,.18)}
+input::placeholder,textarea::placeholder{color:#b8b3a5}
+.txt input,.txt textarea{font-family:'Archivo',sans-serif}
+.res{margin-top:2px;border-top:1px dashed var(--line);padding-top:10px;display:grid;gap:5px;font-size:12.5px}
+.res .row{display:flex;justify-content:space-between;gap:8px}
+.res .row span:first-child{color:var(--ink2);font-weight:600}
+.res .row .v{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink);text-align:right}
+.add{width:100%;border:1.5px dashed var(--steel);background:rgba(47,111,143,.06);color:var(--steel);font:inherit;font-weight:800;font-size:13.5px;padding:12px;border-radius:11px;cursor:pointer}
+.add:active{background:rgba(47,111,143,.14)}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:14px 6px 18px;font-weight:600}
+.secttl{font-size:12px;font-weight:800;color:var(--steel);text-transform:uppercase;letter-spacing:.08em;margin:6px 2px 9px;display:flex;align-items:center;gap:8px}
+.secttl::after{content:"";flex:1;height:1px;background:var(--line)}
+.bagtog{display:flex;background:rgba(19,32,46,.06);border-radius:8px;padding:3px;font-size:12px;font-weight:700}
+.bagtog button{flex:1;border:0;background:transparent;color:var(--ink2);padding:8px 9px;border-radius:6px;font:inherit;font-weight:700;cursor:pointer}
+.bagtog button.on{background:var(--ink);color:var(--paper2)}
+.pillrow{display:flex;gap:7px;flex-wrap:wrap;margin:0 2px 14px}
+.pill{border:1.5px solid var(--line);background:var(--paper2);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink2)}
+.pill.on{background:var(--ink);color:var(--paper2);border-color:var(--ink)}
+.pill b{font-family:'IBM Plex Mono',monospace}
+.btnrow{display:flex;gap:9px;margin:10px 0 0}
+.btnrow button{flex:1;border:1.5px solid var(--ink);background:var(--paper2);color:var(--ink);font:inherit;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer}
+.btnrow button.fill{background:var(--green);color:#fff;border-color:var(--green)}
+.btnrow button.reject{background:var(--red);color:#fff;border-color:var(--red)}
+.tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:5px;background:var(--amber-soft);color:var(--amber-d);flex:none}
+.tag.g{background:#d6ead9;color:var(--green)}
+.tag.r{background:#f0d9d4;color:var(--red)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.5;margin:2px 2px 20px}
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--ink);color:var(--paper2);padding:9px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 16px rgba(19,32,46,.3)}
+.bottom .lab{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--amber)}
+.bottom .tot{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;line-height:1.05}
+.bottom .go{margin-left:auto;background:var(--amber);color:var(--ink);border:0;font:inherit;font-weight:800;padding:10px 14px;border-radius:9px;cursor:pointer;font-size:13px}
+@media print{header,.bottom,.add,.del,.btnrow,.intro,.pillrow{display:none!important}body{padding:0;background:#fff}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">AU</div>
+    <div><h1>Approvals</h1><small>AU One ERP</small></div>
+  </div>
+</header>
+<main id="main"></main>
+<div class="bottom">
+  <div><div class="lab">Pending</div><div class="tot" id="botPending">0</div></div>
+  <button class="go" onclick="exportCSV()">↓ Export CSV</button>
+</div>
+
+<script>
+/* ===========================================================================
+   AU One ERP — Approvals
+   Standalone form: PIC (Project-in-Charge) submits a request, Head/Owner
+   approves or rejects. Local-only (localStorage) until connected to a
+   shared backend — each browser/device keeps its own copy for now.
+   =========================================================================== */
+const $=s=>document.querySelector(s);
+const num=v=>{v=parseFloat(v);return isNaN(v)?0:v};
+const money=v=>'₱'+Math.round(v).toLocaleString('en-PH');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDT=ts=>ts?new Date(ts).toLocaleString('en-PH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+
+const CATS=['Cost Estimate','Budget Request','Change Order','Material Purchase / PO','Manpower Request','Other'];
+
+const S={role:'pic',people:{pic:'',approver:''},filter:'all',requests:[]};
+
+function setRole(r){S.role=r;save();render();}
+function setPeople(k,v){S.people[k]=v;save();}
+function setFilter(f){S.filter=f;render();}
+
+function submitRequest(){
+  const nameEl=$('#picNameInput'),name=(nameEl?nameEl.value:'').trim();
+  if(!name){alert('Enter your name as PIC before submitting.');return;}
+  const project=($('#projName').value||'').trim();
+  if(!project){alert('Enter the project name.');return;}
+  S.people.pic=name;
+  const req={
+    id:Date.now()+'-'+Math.random().toString(36).slice(2,7),
+    project, location:($('#projLoc').value||'').trim(),
+    category:$('#reqCat').value||CATS[0],
+    amount:num($('#reqAmount').value),
+    description:($('#reqDesc').value||'').trim(),
+    pic:name, status:'pending', submittedAt:Date.now(),
+    decidedBy:'',decidedAt:0,remarks:''
+  };
+  S.requests.unshift(req);
+  save();render();
+}
+function decideRequest(id,status){
+  const r=S.requests.find(x=>x.id===id); if(!r)return;
+  const nameEl=$('#approverNameInput'),name=((nameEl?nameEl.value:'')||S.people.approver||'').trim();
+  if(!name){alert('Enter your name (Head/Owner) before approving or rejecting.');return;}
+  S.people.approver=name;
+  const remEl=$('#rem-'+id);
+  r.status=status;r.decidedBy=name;r.decidedAt=Date.now();r.remarks=(remEl?remEl.value:'').trim();
+  save();render();
+}
+function deleteRequest(id){
+  if(!confirm('Delete this request?'))return;
+  S.requests=S.requests.filter(x=>x.id!==id);save();render();
+}
+
+function render(){
+  const role=S.role;
+  const pendingCount=S.requests.filter(r=>r.status==='pending').length;
+  $('#botPending').textContent=pendingCount;
+
+  let h=`<div class="intro"><b>How it works.</b> The <b>PIC</b> (Project-in-Charge) submits a request here; the <b>Head/Owner</b> reviews and approves or rejects it. This is a standalone local file — data is saved on this device only until it's connected to shared storage.</div>
+  <div class="secttl">Viewing As</div>
+  <div class="bagtog" style="margin-bottom:14px">
+    <button class="${role==='pic'?'on':''}" onclick="setRole('pic')">PIC / Requestor</button>
+    <button class="${role==='approver'?'on':''}" onclick="setRole('approver')">Head / Owner</button>
+  </div>`;
+
+  if(role==='pic'){
+    h+=`<div class="secttl">New Request</div>
+    <div class="card">
+      <div class="grid g2">
+        <label class="f txt" style="grid-column:1/-1"><span class="lbl"><span>Your name (PIC)</span></span>
+          <input id="picNameInput" value="${esc(S.people.pic)}" placeholder="e.g. Juan Dela Cruz" oninput="setPeople('pic',this.value)"></label>
+        <label class="f txt"><span class="lbl"><span>Project</span></span><input id="projName" placeholder="e.g. Dela Cruz Residence"></label>
+        <label class="f txt"><span class="lbl"><span>Location</span></span><input id="projLoc" placeholder="City / Province"></label>
+        <label class="f"><span class="lbl"><span>Category</span></span>
+          <select id="reqCat">${CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></label>
+        <label class="f"><span class="lbl"><span>Amount</span><span class="u">₱</span></span>
+          <input id="reqAmount" inputmode="decimal" placeholder="0"></label>
+      </div>
+      <label class="f txt" style="margin-top:10px"><span class="lbl"><span>Description / justification</span></span>
+        <textarea id="reqDesc" placeholder="What is this request for?"></textarea></label>
+      <button class="add" style="margin-top:12px" onclick="submitRequest()">+ Submit for approval</button>
+    </div>`;
+  }else{
+    h+=`<div class="card"><div class="grid g2"><label class="f txt" style="grid-column:1/-1"><span class="lbl"><span>Your name (Head/Owner)</span></span>
+      <input id="approverNameInput" value="${esc(S.people.approver)}" placeholder="e.g. Maria Santos" oninput="setPeople('approver',this.value)"></label></div></div>`;
+  }
+
+  const counts={all:S.requests.length,pending:pendingCount,approved:S.requests.filter(r=>r.status==='approved').length,rejected:S.requests.filter(r=>r.status==='rejected').length};
+  h+=`<div class="secttl">Requests</div>
+  <div class="pillrow">
+    <button class="pill ${S.filter==='all'?'on':''}" onclick="setFilter('all')">All <b>${counts.all}</b></button>
+    <button class="pill ${S.filter==='pending'?'on':''}" onclick="setFilter('pending')">Pending <b>${counts.pending}</b></button>
+    <button class="pill ${S.filter==='approved'?'on':''}" onclick="setFilter('approved')">Approved <b>${counts.approved}</b></button>
+    <button class="pill ${S.filter==='rejected'?'on':''}" onclick="setFilter('rejected')">Rejected <b>${counts.rejected}</b></button>
+  </div>`;
+
+  const list=S.requests.filter(r=>S.filter==='all'||r.status===S.filter).sort((a,b)=>b.submittedAt-a.submittedAt);
+  if(!list.length)h+=`<div class="empty">No requests${S.filter==='all'?' yet':' in this filter'}.</div>`;
+  list.forEach((r,i)=>{
+    const tagClass=r.status==='approved'?'g':r.status==='rejected'?'r':'';
+    const border=r.status==='approved'?'var(--green)':r.status==='rejected'?'var(--red)':'var(--amber)';
+    h+=`<div class="card item" style="border-left-color:${border}">
+      <div class="card-head"><span class="idx">${i+1}</span><h3>${esc(r.project)}</h3><span class="tag ${tagClass}">${r.status}</span><button class="del" onclick="deleteRequest('${r.id}')">×</button></div>
+      <div class="res">
+        <div class="row"><span>Category</span><span class="v">${esc(r.category)}</span></div>
+        ${r.location?`<div class="row"><span>Location</span><span class="v">${esc(r.location)}</span></div>`:''}
+        <div class="row"><span>Amount</span><span class="v">${money(r.amount)}</span></div>
+        <div class="row"><span>Requested by</span><span class="v">${esc(r.pic)}</span></div>
+        <div class="row"><span>Submitted</span><span class="v">${fmtDT(r.submittedAt)}</span></div>
+        ${r.description?`<div class="row"><span>Description</span><span class="v">${esc(r.description)}</span></div>`:''}
+        ${r.status!=='pending'?`<div class="row"><span>${r.status==='approved'?'Approved':'Rejected'} by</span><span class="v">${esc(r.decidedBy)} · ${fmtDT(r.decidedAt)}</span></div>`:''}
+        ${r.remarks?`<div class="row"><span>Remarks</span><span class="v">${esc(r.remarks)}</span></div>`:''}
+      </div>`;
+    if(role==='approver'&&r.status==='pending'){
+      h+=`<label class="f txt" style="margin-top:10px"><span class="lbl"><span>Remarks (optional)</span></span><input id="rem-${r.id}" placeholder="Add a note for the PIC"></label>
+      <div class="btnrow">
+        <button class="fill" onclick="decideRequest('${r.id}','approved')">✓ Approve</button>
+        <button class="reject" onclick="decideRequest('${r.id}','rejected')">✕ Reject</button>
+      </div>`;
+    }
+    h+=`</div>`;
+  });
+  h+=`<div class="note">Data is stored only in this browser (localStorage). Export CSV regularly if you need a shared record, or connect this file to a backend later for real multi-device sync.</div>`;
+  $('#main').innerHTML=h;
+}
+
+function exportCSV(){
+  const rows=[['AU ONE ERP — APPROVAL REQUESTS'],[new Date().toLocaleDateString('en-PH')],[],
+    ['Project','Location','Category','Amount(PHP)','Requested By','Submitted','Status','Decided By','Decided','Remarks','Description']];
+  S.requests.slice().sort((a,b)=>b.submittedAt-a.submittedAt).forEach(r=>{
+    rows.push([r.project,r.location,r.category,Math.round(r.amount),r.pic,fmtDT(r.submittedAt),r.status,r.decidedBy,fmtDT(r.decidedAt)||'',r.remarks,r.description]);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='au-approvals-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+function save(){try{localStorage.setItem('auApprovals',JSON.stringify(S));}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem('auApprovals'));if(d){Object.assign(S,d,{requests:d.requests||[],people:d.people||{pic:'',approver:''}});}}catch(e){console.warn('starting fresh',e);}}
+
+load();render();
+</script>
+</body>
+</html>

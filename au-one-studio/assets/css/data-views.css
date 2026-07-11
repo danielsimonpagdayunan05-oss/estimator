@@ -1,0 +1,47 @@
+/* AU ONE STUDIO · data-views.css — view toolbar, kanban, calendar, skeletons */
+/* ---- icon button (topbar cluster) ---- */
+.iconbtn{width:40px;height:40px;border-radius:11px;background:var(--glass2);border:1px solid var(--stroke);
+  display:grid;place-items:center;color:var(--ink2);
+  transition:color var(--dur-1) var(--ease),border-color var(--dur-1) var(--ease),
+    background var(--dur-1) var(--ease),transform var(--dur-1) var(--ease)}
+.iconbtn:hover{color:var(--brand);border-color:var(--brand);background:var(--brandS)}
+.iconbtn:active{transform:scale(.92)}
+
+/* ---- data-engine view toolbar ---- */
+.viewbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.segmented{display:inline-flex;background:var(--glass2);border:1px solid var(--stroke);border-radius:11px;padding:3px;gap:2px}
+.segmented button{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:8px;font-weight:650;font-size:12.5px;color:var(--muted);
+  transition:color var(--dur-1) var(--ease),background var(--dur-1) var(--ease),box-shadow var(--dur-1) var(--ease)}
+.segmented button:hover{color:var(--ink)}
+.segmented button.on{background:var(--glass-solid);color:var(--brand);box-shadow:var(--shadow-xs)}
+
+.kanban{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(260px,1fr);gap:12px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x proximity}
+.kcol{background:var(--glass2);border:1px solid var(--stroke2);border-radius:var(--r);padding:10px;min-height:120px;scroll-snap-align:start}
+.kcol .kh{display:flex;align-items:center;gap:8px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding:0 2px}
+.kcol .kh .cnt{margin-left:auto;background:var(--glass);border:1px solid var(--stroke2);border-radius:var(--r-pill);padding:1px 8px;font-size:11px;font-variant-numeric:tabular-nums}
+
+.dtable{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;background:var(--glass);border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden}
+.dtable th,.dtable td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--stroke2);white-space:nowrap}
+.dtable th{background:var(--glass2);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800;
+  position:sticky;top:0;z-index:1;cursor:pointer;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.dtable tr:last-child td{border-bottom:0}
+.dtable tbody tr{cursor:pointer;transition:background var(--dur-1) var(--ease)}
+.dtable tbody tr:hover{background:var(--brandS)}
+.dtable tbody tr:hover td:first-child{box-shadow:inset 2.5px 0 0 var(--brand)}
+.tablewrap{overflow-x:auto;border-radius:var(--r)}
+
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal .cd{min-height:74px;background:var(--glass);border:1px solid var(--stroke2);border-radius:10px;padding:6px;font-size:11px;
+  transition:border-color var(--dur-1) var(--ease)}
+.cal .cd:hover{border-color:var(--muted2)}
+.cal .cd .dn{font-weight:800;color:var(--muted)}
+.cal .dot2{display:block;font-size:10px;font-weight:700;background:var(--brandS);color:var(--brand-ink);border-radius:6px;padding:2.5px 6px;margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;transition:transform var(--dur-1) var(--ease)}
+.cal .dot2:hover{transform:translateX(1px)}
+.cal .head{font-size:10px;font-weight:800;text-transform:uppercase;color:var(--muted);text-align:center;padding:4px 0;letter-spacing:.06em}
+
+/* ---- skeleton loading ---- */
+.skel{position:relative;overflow:hidden;background:var(--glass2);border-radius:12px}
+.skel::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+  transform:translateX(-100%);animation:shine 1.2s infinite}
+.skel-card{height:150px;margin-bottom:12px}
